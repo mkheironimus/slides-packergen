@@ -1,0 +1,130 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/git/packergen/perl6/packergen.pl6.html</title>
+<meta name="Generator" content="Vim/7.4">
+<meta name="plugin-version" content="vim7.4_v2">
+<meta name="syntax" content="perl6">
+<meta name="settings" content="use_css,pre_wrap,no_foldcolumn,prevent_copy=">
+<meta name="colorscheme" content="morning">
+<style type="text/css">
+<!--
+pre { white-space: pre-wrap; font-family: monospace; color: #000000; background-color: #e5e5e5; }
+body { font-family: monospace; color: #000000; background-color: #e5e5e5; }
+* { font-size: 1em; }
+.Type { color: #2e8b57; font-weight: bold; }
+.Normal { color: #000000; background-color: #e5e5e5; padding-bottom: 1px; }
+.Statement { color: #a52a2a; font-weight: bold; }
+.Comment { color: #0000ff; }
+.Constant { color: #ff00ff; background-color: #f2f2f2; padding-bottom: 1px; }
+.Special { color: #6a5acd; background-color: #f2f2f2; padding-bottom: 1px; }
+.PreProc { color: #800080; }
+.Identifier { color: #008b8b; }
+-->
+</style>
+
+<script type='text/javascript'>
+<!--
+
+-->
+</script>
+</head>
+<body>
+<pre id='vimCodeElement'>
+<span class="PreProc">use</span> <span class="Statement">v</span><span class="Constant">6</span><span class="Statement">;</span>
+
+<span class="PreProc">use</span> <span class="Normal">JSON</span>::<span class="Normal">Pretty</span><span class="Statement">;</span>
+<span class="PreProc">use</span> <span class="Normal">YAMLish</span><span class="Statement">;</span>
+
+<span class="Statement">class</span> <span class="Normal">PackerGen</span> {
+    <span class="Special">has</span> <span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">cfg</span> <span class="Statement">=</span> ()<span class="Statement">;</span>
+    <span class="Special">has</span> <span class="Identifier">%</span><span class="Special">.</span><span class="Identifier">output</span> <span class="Statement">=</span> ()<span class="Statement">;</span>
+
+    <span class="Comment"># Constructor taking an optional input file, not inherited by child class.</span>
+    <span class="Statement">submethod</span> <span class="Normal">BUILD</span>(<span class="Type">Str</span> <span class="Statement">:</span><span class="Identifier">$</span><span class="Identifier">yaml</span><span class="Statement">=</span><span class="Special">''</span>) {
+        <span class="Identifier">self</span><span class="Statement">.</span><span class="Normal">load</span>(<span class="Identifier">$</span><span class="Identifier">yaml</span>)<span class="Statement">;</span>
+        <span class="Identifier">self</span><span class="Statement">.</span><span class="Normal">generate</span>()<span class="Statement">;</span>
+    }
+
+    <span class="Comment"># Load a YAML file from stdin or the named file.</span>
+    <span class="Statement">method</span> <span class="Normal">load</span>(<span class="Type">Str</span> <span class="Identifier">$</span><span class="Identifier">in</span>) {
+        <span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">cfg</span> <span class="Statement">=</span> <span class="Normal">load-yaml</span>((<span class="Identifier">$</span><span class="Identifier">in</span> <span class="Statement">ne</span> <span class="Special">''</span>) <span class="Statement">??</span> <span class="Identifier">slurp</span>(<span class="Identifier">$</span><span class="Identifier">in</span>) <span class="Statement">!!</span> <span class="Identifier">$</span><span class="Special">*</span><span class="Identifier">IN</span><span class="Statement">.</span><span class="Normal">slurp-rest</span>)<span class="Statement">;</span>
+    }
+
+    <span class="Comment"># Write the generated to JSON to stdout or the given filename.</span>
+    <span class="Statement">multi</span> <span class="Statement">method</span> <span class="Normal">save</span>(<span class="Type">Str</span> <span class="Identifier">$</span><span class="Identifier">out</span> <span class="PreProc">where</span> { <span class="Identifier">$</span><span class="Identifier">out</span> <span class="Statement">eq</span> <span class="Special">''</span> }) {
+        <span class="Identifier">say</span> <span class="Normal">to-json</span>(<span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">output</span>)<span class="Statement">;</span>
+    }
+
+    <span class="Statement">multi</span> <span class="Statement">method</span> <span class="Normal">save</span>(<span class="Type">Str</span> <span class="Identifier">$</span><span class="Identifier">out</span>) {
+        <span class="Comment"># to-json doesn't have a final newline</span>
+        <span class="Normal">spurt</span>(<span class="Identifier">$</span><span class="Identifier">out</span><span class="Statement">,</span> <span class="Normal">to-json</span>(<span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">output</span>) <span class="Statement">~</span> <span class="Special">&quot;</span><span class="Special">\n</span><span class="Special">&quot;</span>)<span class="Statement">;</span>
+    }
+
+    <span class="Comment"># If a config_template element exists, load that content (in order) and</span>
+    <span class="Comment"># then overlay the supplied data. Otherwise just return the data.</span>
+    <span class="Statement">multi</span> <span class="Statement">method</span> <span class="Normal">expand_entry</span>(<span class="Identifier">%</span><span class="Identifier">data</span>
+            <span class="PreProc">where</span> { <span class="Identifier">%</span><span class="Identifier">data</span><span class="Special">&lt;</span><span class="Constant">config_template</span><span class="Special">&gt;</span><span class="Statement">:</span><span class="Constant">exists</span> } <span class="Statement">--&gt;</span> <span class="Type">Hash</span>) {
+        <span class="Special">my</span> <span class="Identifier">%</span><span class="Identifier">new</span> <span class="Statement">=</span> <span class="Identifier">%</span><span class="Identifier">data</span><span class="Special">&lt;</span><span class="Constant">config_template</span><span class="Special">&gt;</span><span class="Statement">:</span><span class="Constant">delete</span><span class="Statement">.</span><span class="Identifier">map</span>({ <span class="Normal">load-yaml</span>(<span class="Identifier">slurp</span>(<span class="Identifier">$</span><span class="Special">^</span><span class="Identifier">a</span>)) })<span class="Statement">;</span>
+        <span class="Statement">%</span>(<span class="Identifier">%</span><span class="Identifier">new</span><span class="Statement">,</span> <span class="Identifier">%</span><span class="Identifier">data</span>)<span class="Statement">;</span>
+    }
+
+    <span class="Statement">multi</span> <span class="Statement">method</span> <span class="Normal">expand_entry</span>(<span class="Identifier">%</span><span class="Identifier">data</span> <span class="Statement">--&gt;</span> <span class="Type">Hash</span>) {
+        <span class="Identifier">%</span><span class="Identifier">data</span><span class="Statement">;</span>
+    }
+
+    <span class="Comment"># Process templates and put the name in to a key of the resulting hash.</span>
+    <span class="Statement">method</span> <span class="Normal">build</span>(<span class="Type">Pair</span> (<span class="Statement">:</span><span class="Constant">key</span>(<span class="Statement">:</span><span class="Identifier">$</span><span class="Identifier">name</span>)<span class="Statement">,</span> <span class="Statement">:</span><span class="Constant">value</span>(<span class="Statement">:</span><span class="Identifier">$</span><span class="Identifier">data</span>)) <span class="Statement">--&gt;</span> <span class="Type">Hash</span>) {
+        <span class="Statement">%</span>(<span class="Identifier">self</span><span class="Statement">.</span><span class="Normal">expand_entry</span>(<span class="Identifier">$</span><span class="Identifier">data</span>)<span class="Statement">,</span> <span class="Special">'</span><span class="Constant">name</span><span class="Special">'</span> <span class="Statement">=&gt;</span> <span class="Identifier">$</span><span class="Identifier">name</span>)<span class="Statement">;</span>
+    }
+
+    <span class="Comment"># Process templates and add the global override definition if there</span>
+    <span class="Comment"># is no override in the provisioner.</span>
+    <span class="Statement">method</span> <span class="Normal">provision</span>(<span class="Identifier">%</span><span class="Identifier">prov</span> <span class="Statement">--&gt;</span> <span class="Type">Hash</span>) {
+        <span class="Special">my</span> <span class="Identifier">%</span><span class="Identifier">new</span> <span class="Statement">=</span> <span class="Identifier">self</span><span class="Statement">.</span><span class="Normal">expand_entry</span>(<span class="Identifier">%</span><span class="Identifier">prov</span>)<span class="Statement">;</span>
+        <span class="Comment"># I should describe the precedence of multiple override definitions.</span>
+        <span class="Statement">if</span> (<span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">cfg</span><span class="Special">&lt;</span><span class="Constant">provisioner_override</span><span class="Special">&gt;</span><span class="Statement">:</span><span class="Constant">exists</span> <span class="Statement">&amp;&amp;</span> <span class="Statement">!</span>(<span class="Identifier">%</span><span class="Identifier">prov</span><span class="Special">&lt;</span><span class="Constant">override</span><span class="Special">&gt;</span><span class="Statement">:</span><span class="Constant">exists</span>)) {
+            <span class="Identifier">%</span><span class="Identifier">new</span><span class="Special">&lt;</span><span class="Constant">override</span><span class="Special">&gt;</span> <span class="Statement">=</span> <span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">cfg</span><span class="Special">&lt;</span><span class="Constant">provisioner_override</span><span class="Special">&gt;</span><span class="Statement">;</span>
+        }
+        <span class="Identifier">%</span><span class="Identifier">new</span><span class="Statement">;</span>
+    }
+
+    <span class="Comment"># Process templates for a sequence or a single postprocessor.</span>
+    <span class="Statement">multi</span> <span class="Statement">method</span> <span class="Normal">postproc</span>(<span class="Identifier">@</span><span class="Identifier">post</span> <span class="Statement">--&gt;</span> <span class="Type">Seq</span>) {
+        <span class="Identifier">@</span><span class="Identifier">post</span><span class="Statement">.</span><span class="Identifier">map</span>({ <span class="Identifier">self</span><span class="Statement">.</span><span class="Normal">expand_entry</span>(<span class="Identifier">%</span><span class="Special">^</span><span class="Identifier">a</span>) })<span class="Statement">;</span>
+    }
+
+    <span class="Statement">multi</span> <span class="Statement">method</span> <span class="Normal">postproc</span>(<span class="Identifier">%</span><span class="Identifier">post</span> <span class="Statement">--&gt;</span> <span class="Type">Hash</span>) {
+        <span class="Identifier">self</span><span class="Statement">.</span><span class="Normal">expand_entry</span>(<span class="Identifier">%</span><span class="Identifier">post</span>)<span class="Statement">;</span>
+    }
+
+    <span class="Statement">method</span> <span class="Normal">generate</span>(<span class="Statement">--&gt;</span> <span class="Type">Hash</span>) {
+        <span class="Comment"># At least one builder definition is required by packer.</span>
+        <span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">output</span><span class="Special">&lt;</span><span class="Constant">builders</span><span class="Special">&gt;</span> <span class="Statement">=</span> <span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">cfg</span><span class="Special">&lt;</span><span class="Constant">builders</span><span class="Special">&gt;</span><span class="Statement">.</span><span class="Identifier">map</span>({ <span class="Identifier">self</span><span class="Statement">.</span><span class="Normal">build</span>(<span class="Identifier">$</span><span class="Special">^</span><span class="Identifier">a</span>) })<span class="Statement">;</span>
+
+        <span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">output</span><span class="Special">&lt;</span><span class="Constant">provisioners</span><span class="Special">&gt;</span> <span class="Statement">=</span> <span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">cfg</span><span class="Special">&lt;</span><span class="Constant">provisioners</span><span class="Special">&gt;</span><span class="Statement">.</span><span class="Identifier">map</span>({<span class="Identifier">self</span><span class="Statement">.</span><span class="Normal">provision</span>(<span class="Identifier">$</span><span class="Special">^</span><span class="Identifier">a</span>) })
+                <span class="Statement">if</span> (<span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">cfg</span><span class="Special">&lt;</span><span class="Constant">provisioners</span><span class="Special">&gt;</span><span class="Statement">:</span><span class="Constant">exists</span>)<span class="Statement">;</span>
+
+        <span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">output</span><span class="Special">&lt;</span><span class="Constant">post-processors</span><span class="Special">&gt;</span> <span class="Statement">=</span> <span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">cfg</span><span class="Special">&lt;</span><span class="Constant">post-processors</span><span class="Special">&gt;</span><span class="Statement">.</span><span class="Identifier">map</span>({
+                <span class="Identifier">self</span><span class="Statement">.</span><span class="Normal">postproc</span>(<span class="Identifier">$</span><span class="Special">^</span><span class="Identifier">a</span>) }) <span class="Statement">if</span> (<span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">cfg</span><span class="Special">&lt;</span><span class="Constant">post-processors</span><span class="Special">&gt;</span><span class="Statement">:</span><span class="Constant">exists</span>)<span class="Statement">;</span>
+
+        <span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">output</span><span class="Special">&lt;</span><span class="Constant">description</span><span class="Special">&gt;</span> <span class="Statement">=</span> <span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">cfg</span><span class="Special">&lt;</span><span class="Constant">description</span><span class="Special">&gt;</span>
+                <span class="Statement">if</span> (<span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">cfg</span><span class="Special">&lt;</span><span class="Constant">description</span><span class="Special">&gt;</span><span class="Statement">:</span><span class="Constant">exists</span>)<span class="Statement">;</span>
+
+        <span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">output</span><span class="Special">&lt;</span><span class="Constant">variables</span><span class="Special">&gt;</span> <span class="Statement">=</span> <span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">cfg</span><span class="Special">&lt;</span><span class="Constant">variables</span><span class="Special">&gt;</span> <span class="Statement">if</span> (<span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">cfg</span><span class="Special">&lt;</span><span class="Constant">variables</span><span class="Special">&gt;</span><span class="Statement">:</span><span class="Constant">exists</span>)<span class="Statement">;</span>
+
+        <span class="Identifier">%</span><span class="Special">!</span><span class="Identifier">output</span><span class="Statement">;</span>
+    }
+
+}
+
+<span class="Comment"># --in=input.yaml --out=output.json</span>
+<span class="Statement">sub</span> <span class="Normal">MAIN</span>(<span class="Type">Str</span> <span class="Statement">:</span><span class="Identifier">$</span><span class="Identifier">in</span><span class="Statement">=</span><span class="Special">''</span><span class="Statement">,</span> <span class="Type">Str</span> <span class="Statement">:</span><span class="Identifier">$</span><span class="Identifier">out</span><span class="Statement">=</span><span class="Special">''</span>) {
+    <span class="Special">my</span> <span class="Identifier">$</span><span class="Identifier">pg</span> <span class="Statement">=</span> <span class="Normal">PackerGen</span><span class="Statement">.</span><span class="Identifier">new</span>(<span class="Constant">yaml</span> <span class="Statement">=&gt;</span> <span class="Identifier">$</span><span class="Identifier">in</span>)<span class="Statement">;</span>
+    <span class="Identifier">$</span><span class="Identifier">pg</span><span class="Statement">.</span><span class="Normal">save</span>(<span class="Identifier">$</span><span class="Identifier">out</span>)<span class="Statement">;</span>
+}
+</pre>
+</body>
+</html>
+<!-- vim: set foldmethod=manual : -->

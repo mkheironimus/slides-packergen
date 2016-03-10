@@ -1,0 +1,25 @@
+      "ssh_username": "vagrant",
+      "ssh_wait_timeout": "10000s",
+      "vboxmanage": [
+        ["modifyvm", "{{.Name}}", "--memory", "1280"],
+        ["modifyvm", "{{.Name}}", "--cpus", "1"],
+        ["modifyvm", "{{.Name}}", "--vram", "12"]
+      ],
+      "vm_name": "{{user `c7_name`}}-{{user `stamp`}}"
+    },
+    {
+      "type": "docker",
+      "name": "centos-6",
+      "commit": true,
+      "image": "{{user `c6_docker_image`}}",
+      "pull": false
+    },
+    {
+      "type": "docker",
+      "name": "centos-7",
+      "commit": true,
+      "image": "{{user `c7_docker_image`}}",
+      "pull": false
+    }
+  ],
+  "post-processors": [

@@ -1,0 +1,25 @@
+        ["modifyvm", "{{.Name}}", "--memory", "1280"],
+        ["modifyvm", "{{.Name}}", "--cpus", "1"],
+        ["modifyvm", "{{.Name}}", "--vram", "12"]
+      ],
+      "vm_name": "{{user `c6_name`}}-{{user `stamp`}}"
+    },
+    {
+      "name": "centos-7-virtualbox",
+      "type": "virtualbox-iso",
+      "boot_command": [
+        "<tab> text {{user `c7_ks_opts`}} ks=http://{{.HTTPIP}}:{{.HTTPPort}}/{{user `c7_name`}}.ks<enter><wait>"
+      ],
+      "disk_size": 8192,
+      "export_opts": ["--manifest"],
+      "guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+      "guest_os_type": "RedHat_64",
+      "hard_drive_interface": "sata",
+      "headless": "{{user `headless`}}",
+      "http_directory": "http",
+      "iso_checksum": "{{user `c7_iso_checksum`}}",
+      "iso_checksum_type": "sha512",
+      "iso_url": "{{user `c7_iso_path`}}",
+      "output_directory": "builds/{{build_name}}-{{user `stamp`}}",
+      "shutdown_command": "echo 'vagrant' | sudo -S /sbin/halt -h -p",
+      "ssh_password": "vagrant",

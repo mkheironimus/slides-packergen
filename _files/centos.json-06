@@ -1,0 +1,19 @@
+  "variables": {
+    "headless": "true",
+    "http_proxy": "{{env `http_proxy`}}",
+    "https_proxy": "{{env `https_proxy`}}",
+    "no_proxy": "{{env `no_proxy`}}",
+    "stamp": "{{isotime \\"20060102\\"}}",
+    "verbose": "true",
+    "c6_name": "centos-6",
+    "c6_iso_checksum": "c694ba4903ac2eb07d996ffa06b92d1dda78ec035d1ad87fdc9681e7245e7fc363eae987ec2476a408cf0bcaed0080ab05c7f26d7a9141eec8f898993c1057b1",
+    "c6_iso_path": "iso/CentOS-6.7-x86_64-bin-DVD1.iso",
+    "c6_ks_opts": "",
+    "c6_docker_image": "centos:6",
+    "c7_name": "centos-7",
+    "c7_iso_checksum": "3e084199713f0a7a39942a123ad698d36e0ee0a2253774e96c44a85df1574ed4ab6f7f13f52e778318902e59d7e0eb056b8557397946e1629119dec1b3b8d442",
+    "c7_iso_path": "iso/CentOS-7-x86_64-DVD-1511.iso",
+    "c7_ks_opts": "rd.live.check=0",
+    "c7_docker_image": "centos:7"
+  }
+}

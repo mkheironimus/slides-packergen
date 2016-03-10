@@ -1,0 +1,23 @@
+    config_template: tmpl_vagrant.yml
+    only:
+      - centos-6-virtualbox
+      - centos-7-virtualbox
+  -
+    -
+      config_template: tmpl_docker_tag.yml
+      only:
+        - centos-6
+        - centos-7
+    -
+      config_template: tmpl_docker_save.yml
+      only:
+        - centos-6
+        - centos-7
+# defaults, to be overridden on command line or var file.
+variables: 
+  headless: "true"
+  http_proxy: "{{env `http_proxy`}}"
+  https_proxy: "{{env `https_proxy`}}"
+  no_proxy: "{{env `no_proxy`}}"
+  stamp: "{{isotime \\"20060102\\"}}"
+  verbose: "true"

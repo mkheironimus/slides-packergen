@@ -1,0 +1,25 @@
+    image: centos:7
+provisioner_override:
+  centos-6:
+    execute_command: "env {{.Vars}} bash -eu '{{.Path}}'"
+  centos-7:
+    execute_command: "env {{.Vars}} bash -eu '{{.Path}}'"
+provisioners:
+  -
+    config_template: tmpl_shell.yml
+    scripts:
+      - shell/yum.sh
+      - shell/docker_prep.sh
+      - shell/grub.sh
+      - shell/patch.sh
+  -
+    config_template: tmpl_shell.yml
+    scripts:
+      - shell/vmtools.sh
+      - shell/vagrant.sh
+      - shell/vm_ami_cleanup.sh
+      - shell/cleanup.sh
+      - shell/whiteout.sh
+    pause_before: 10s
+post-processors:
+  -

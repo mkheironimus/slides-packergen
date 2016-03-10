@@ -1,0 +1,25 @@
+{
+  "description": "Build Vagrant-ready CentOS images that look like the official AMIs in the AWS Marketplace.",
+  "builders": [
+    {
+      "name": "centos-6-virtualbox",
+      "type": "virtualbox-iso",
+      "boot_command": [
+        "<tab> text {{user `c6_ks_opts`}} ks=http://{{.HTTPIP}}:{{.HTTPPort}}/{{user `c6_name`}}.ks<enter><wait>"
+      ],
+      "disk_size": 8192,
+      "export_opts": ["--manifest"],
+      "guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+      "guest_os_type": "RedHat_64",
+      "hard_drive_interface": "sata",
+      "headless": "{{user `headless`}}",
+      "http_directory": "http",
+      "iso_checksum": "{{user `c6_iso_checksum`}}",
+      "iso_checksum_type": "sha512",
+      "iso_url": "{{user `c6_iso_path`}}",
+      "output_directory": "builds/{{build_name}}-{{user `stamp`}}",
+      "shutdown_command": "echo 'vagrant' | sudo -S /sbin/halt -h -p",
+      "ssh_password": "vagrant",
+      "ssh_username": "vagrant",
+      "ssh_wait_timeout": "10000s",
+      "vboxmanage": [

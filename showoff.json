@@ -1,0 +1,12 @@
+{
+  "name": "Human-Friendly Configuration",
+  "description": "How I learned to stop worrying and love the JSON.",
+  "author": "Michael Heironimus",
+  "sections": [
+    { "section": "intro" },
+    { "section": "packer" },
+    { "section": "yaml" },
+    { "section": "perl" },
+    { "section": "closing" }
+  ]
+}

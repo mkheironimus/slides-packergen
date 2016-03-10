@@ -1,0 +1,25 @@
+        "HOME_DIR=/home/vagrant",
+        "http_proxy={{user `http_proxy`}}",
+        "https_proxy={{user `https_proxy`}}",
+        "no_proxy={{user `no_proxy`}}",
+        "VERBOSE={{user `verbose`}}"
+      ],
+      "override": {
+        "centos-6-virtualbox": {
+          "execute_command": "env {{.Vars}} sudo -S -E bash -eu '{{.Path}}'"
+        },
+        "centos-7-virtualbox": {
+          "execute_command": "env {{.Vars}} sudo -S -E bash -eu '{{.Path}}'"
+        }
+      },
+      "execute_command": "env {{.Vars}} bash -eu '{{.Path}}'",
+      "scripts": [
+        "shell/yum.sh",
+        "shell/docker_prep.sh",
+        "shell/grub.sh",
+        "shell/patch.sh"
+      ]
+    },
+    {
+      "type": "shell",
+      "pause_before": "10s",

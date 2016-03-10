@@ -1,0 +1,25 @@
+    {
+      "type": "vagrant",
+      "only": ["centos-6-virtualbox", "centos-7-virtualbox"],
+      "compression_level": 9,
+      "keep_input_artifact": true,
+      "output": "builds/{{.BuildName}}-{{user `stamp`}}.box"
+    },
+    [
+      {
+        "type": "docker-tag",
+        "only": ["centos-6", "centos-7"],
+        "repository": "mkheironimus/{{build_name}}",
+        "tag": "{{user `stamp`}}"
+      },
+      {
+        "type": "docker-save",
+        "only": ["centos-6", "centos-7"],
+        "path": "builds/{{build_name}}-{{user `stamp`}}.tar"
+      }
+    ]
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "environment_vars": [

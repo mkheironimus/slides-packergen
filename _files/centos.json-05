@@ -1,0 +1,25 @@
+      "environment_vars": [
+        "HOME_DIR=/home/vagrant",
+        "http_proxy={{user `http_proxy`}}",
+        "https_proxy={{user `https_proxy`}}",
+        "no_proxy={{user `no_proxy`}}",
+        "VERBOSE={{user `verbose`}}"
+      ],
+      "override": {
+        "centos-6-virtualbox": {
+          "execute_command": "env {{.Vars}} sudo -S -E bash -eu '{{.Path}}'"
+        },
+        "centos-7-virtualbox": {
+          "execute_command": "env {{.Vars}} sudo -S -E bash -eu '{{.Path}}'"
+        }
+      },
+      "execute_command": "env {{.Vars}} bash -eu '{{.Path}}'",
+      "scripts": [
+        "shell/vmtools.sh",
+        "shell/vagrant.sh",
+        "shell/vm_ami_cleanup.sh",
+        "shell/cleanup.sh",
+        "shell/whiteout.sh"
+      ]
+    }
+  ],
