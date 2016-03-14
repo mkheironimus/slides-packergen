@@ -1,5 +1,5 @@
 !SLIDE title
-# Human-Friendly Configuration
+# Human-Friendly Configuration with Perl 6
 
 ## or How I Learned to Stop Worrying and Love the JSON
 
@@ -9,6 +9,7 @@
 # A few words about me
 * Infrastructure
 * The home for your applications!
+* Or sometimes the sausage maker.
 
 !SLIDE
 # I don't always write code, but when I do...

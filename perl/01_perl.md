@@ -1,8 +1,14 @@
 !SLIDE bullets incremental
-# Perl6s of Wisdom
+# Perls of Wisdom
 * Rakudo Star ships with JSON::Tiny
 * JSON::Pretty gives you formatted output
 * YAML is unfinished, so use YAMLish
+
+!SLIDE bullets incremental
+# Modules, you say?
+* Modules you expect to use may be unfinished
+* Documentation / examples may be lacking
+* YAMLish output is not very mature - fails to quote some strings
 
 !SLIDE
 # Building a YAML starting point
