@@ -17,3 +17,9 @@
 * Annoyance reduction
 * Team enlightenment
 
+~~~SECTION:notes~~~
+
+Some people, especially if they're not very experienced, simply don't think in
+terms of automation. Others approach it in a completely linear manner.
+
+~~~ENDSECTION~~~
