@@ -9,8 +9,6 @@
 * Install VM from ISO or import a disk image
 * Run setup scripts and tools
 * Run optional post-install tasks
-    * Vagrant box packaging
-    * Docker push, tag, etc.
 * Configured by handwritten JSON file
 
 !SLIDE bullets incremental
