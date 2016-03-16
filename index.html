@@ -206,6 +206,13 @@
 <li>Annoyance reduction</li>
 <li>Team enlightenment</li>
 </ul>
+
+<div class="notes">
+
+<p>Some people, especially if they're not very experienced, simply don't think in
+terms of automation. Others approach it in a completely linear manner.</p>
+
+</div>
 </div>
 </div>
 <div id="packer_01_packer1" class="slide bullets incremental" data-transition="none">
@@ -217,6 +224,16 @@
 <li>Create disk images, Vagrant boxes, Docker images</li>
 <li><a href="http://packer.io/" target="_blank">http://packer.io/</a></li>
 </ul>
+
+<div class="notes">
+
+<p>If you don't know Vagrant, it's automation around copying and configuring VMs
+from images.</p>
+
+<p>Packer creates Docker images without a Dockerfile by running things in the
+image and committing or saving.</p>
+
+</div>
 </div>
 </div>
 <div id="packer_01_packer2" class="slide bullets incremental" data-transition="none">
@@ -226,15 +243,17 @@
 <ul>
 <li>Install VM from ISO or import a disk image</li>
 <li>Run setup scripts and tools</li>
-<li>Run optional post-install tasks
-
-<ul>
-<li>Vagrant box packaging</li>
-<li>Docker push, tag, etc.</li>
-</ul>
-</li>
+<li>Run optional post-install tasks</li>
 <li>Configured by handwritten JSON file</li>
 </ul>
+
+<div class="notes">
+
+<p>Setup examples: shell scripts, Puppet, Chef, Salt, Ansible, etc.</p>
+
+<p>Post-install examples: Vagrant box package, docker push/tag/etc.</p>
+
+</div>
 </div>
 </div>
 <div id="packer_01_packer3" class="slide bullets incremental" data-transition="none">
@@ -246,6 +265,15 @@
 <li>No comments, just app-specific keys for annotations</li>
 <li>CentOS 6/7 build file is 169 lines and 5.5k</li>
 </ul>
+
+<div class="notes">
+
+<p>AWS CloudFormation also has special JSON keys for annotations.</p>
+
+<p>The build file is small in absolute terms, but it's a lot of JSON to manage by
+hand. There is also a second that is slightly larger.</p>
+
+</div>
 </div>
 </div>
 <div id="packer_01_packer4" class="slide smaller" data-transition="none">
@@ -461,6 +489,14 @@
 <li>If you put builders in different files, you duplicate everything else</li>
 <li>Supports user-defined variables, but can not iterate</li>
 </ul>
+
+<div class="notes">
+
+<p>Builders run in parallel, so you may benefit from putting them together.</p>
+
+<p>Variables are also only usable in text fields, and not even in all of those.</p>
+
+</div>
 </div>
 </div>
 <div id="yaml_01_yaml1" class="slide bullets incremental" data-transition="none">
@@ -473,6 +509,12 @@
 <li>Commenting</li>
 <li><a href="http://yaml.org/" target="_blank">http://yaml.org/</a></li>
 </ul>
+
+<div class="notes">
+
+<p>Worry about a nice file first, but how do you pick a new file format?</p>
+
+</div>
 </div>
 </div>
 <div id="yaml_01_yaml2" class="slide bullets incremental" data-transition="none">
@@ -484,6 +526,14 @@
 <li>Lots of Packer config still needs quotes</li>
 <li>Direct conversion is still repetitious</li>
 </ul>
+
+<div class="notes">
+
+<p>Packer does use nested arrays, most notably for ordering postprocessors.</p>
+
+<p>Remember when computers were going to save us from mundane repetitive tasks?</p>
+
+</div>
 </div>
 </div>
 <div id="yaml_01_yaml3" class="slide bullets incremental" data-transition="none">
@@ -495,6 +545,15 @@
 <li>Include other YAML files</li>
 <li>Initial attempt at some top-level global settings</li>
 </ul>
+
+<div class="notes">
+
+<p>For simplicity, includes can't be nested.</p>
+
+<p>Those global settings may go away. They don't do anything you can't do with
+includes.</p>
+
+</div>
 </div>
 </div>
 <div id="yaml_01_yaml4" class="slide smaller" data-transition="none">
@@ -598,6 +657,12 @@ variables:
     - &lt;tab&gt; text ks=http://{{.HTTPIP}}:{{.HTTPPort}}/centos-6.ks&lt;enter&gt;&lt;wait&gt;
   vm_name: "centos-6-{{user `stamp`}}"
   iso_checksum: c694ba4903ac2eb07d996ffa06b92d1dda78ec035d1ad87fdc9681e7245e7fc363eae987ec2476a408cf0bcaed0080ab05c7f26d7a9141eec8f898993c1057b1</code></pre>
+
+<div class="notes">
+
+<p>Excerpt from the top-level YAML file.</p>
+
+</div>
 </div>
 </div>
 <div id="yaml_01_yaml8" class="slide small" data-transition="none">
@@ -626,6 +691,12 @@ vboxmanage:
     - --vram
     - "12"
 shutdown_command: echo 'vagrant' | sudo -S /sbin/halt -h -p</code></pre>
+
+<div class="notes">
+
+<p>tmpl_vbox.yml, common to both ISO and OVF VirtualBox builders.</p>
+
+</div>
 </div>
 </div>
 <div id="yaml_01_yaml9" class="slide " data-transition="none">
@@ -638,6 +709,12 @@ guest_os_type: RedHat_64
 guest_additions_path: VBoxGuestAdditions_{{.Version}}.iso
 disk_size: 8192
 iso_checksum_type: sha512</code></pre>
+
+<div class="notes">
+
+<p>tmpl_vbox_iso.yml, second template in the list.</p>
+
+</div>
 </div>
 </div>
 <div id="yaml_01_yaml10" class="slide " data-transition="none">
@@ -651,10 +728,50 @@ iso_checksum_type: sha512</code></pre>
     - &lt;tab&gt; text ks=http://{{.HTTPIP}}:{{.HTTPPort}}/centos-6.ks&lt;enter&gt;&lt;wait&gt;
   vm_name: "centos-6-{{user `stamp`}}"
   iso_checksum: c694ba4903ac2eb07d996ffa06b92d1dda78ec035d1ad87fdc9681e7245e7fc363eae987ec2476a408cf0bcaed0080ab05c7f26d7a9141eec8f898993c1057b1</code></pre>
+
+<div class="notes">
+
+<p>Everything but config_template is layered on top, and the name is moved in to
+the "name" key.</p>
+
+<p>Builders run in parallel so the order doesn't matter, so they can be named in
+the YAML. Provisioners and postprocessors require a specific order, so they
+would need a sort key.</p>
+
 </div>
 </div>
-<div id="perl_01_perl1" class="slide bullets incremental" data-transition="none">
-<div class="content bullets incremental" ref="perl/01_perl/1">
+</div>
+<div id="perl_01_perl1" class="slide bullets" data-transition="none">
+<div class="content bullets" ref="perl/01_perl/1">
+<h1>The Script</h1>
+
+<ul>
+<li>Minimal testing, but It Works For Me (TM)</li>
+<li>No error handling
+
+<ul>
+<li>Perl will tell you if files can't be read or written</li>
+<li>YAMLish will complain if the input is not valid YAML</li>
+<li>Packer will tell you if the JSON output is wrong</li>
+</ul>
+</li>
+</ul>
+
+<div class="notes">
+
+<p>At this stage error handling is more of a "neatness counts" thing than a real
+need. Plus I'm still in the "how does this work/look" stage with Perl 6.</p>
+
+<p>YAMLish doesn't say what's wrong, just that parsing failed.</p>
+
+<p>Since the script does almost no transformation, you can use Packer's error on
+your YAML just as well as on the JSON.</p>
+
+</div>
+</div>
+</div>
+<div id="perl_01_perl2" class="slide bullets incremental" data-transition="none">
+<div class="content bullets incremental" ref="perl/01_perl/2">
 <h1>Perls of Wisdom</h1>
 
 <ul>
@@ -662,21 +779,39 @@ iso_checksum_type: sha512</code></pre>
 <li>JSON::Pretty gives you formatted output</li>
 <li>YAML is unfinished, so use YAMLish</li>
 </ul>
+
+<div class="notes">
+
+<p>Lessons learned.</p>
+
+<p>JSON::Tiny should work, but it's untested.</p>
+
 </div>
 </div>
-<div id="perl_01_perl2" class="slide bullets incremental" data-transition="none">
-<div class="content bullets incremental" ref="perl/01_perl/2">
+</div>
+<div id="perl_01_perl3" class="slide bullets incremental" data-transition="none">
+<div class="content bullets incremental" ref="perl/01_perl/3">
 <h1>Modules, you say?</h1>
 
 <ul>
 <li>Modules you expect to use may be unfinished</li>
 <li>Documentation / examples may be lacking</li>
-<li>YAMLish output is not very mature - fails to quote some strings</li>
+<li>YAMLish output fails to quote some strings</li>
 </ul>
+
+<div class="notes">
+
+<p>You can't yet assume that everything will "just work" in Perl 6.</p>
+
+<p>I filed an issue on github about quoting numeric strings and the YAMLish author
+said he needed to have it quote a lot more, and that output was generally less
+mature than input.</p>
+
 </div>
 </div>
-<div id="perl_01_perl3" class="slide " data-transition="none">
-<div class="content " ref="perl/01_perl/3">
+</div>
+<div id="perl_01_perl4" class="slide " data-transition="none">
+<div class="content " ref="perl/01_perl/4">
 <h1>Building a YAML starting point</h1>
 
 <pre class="hilight">
@@ -689,6 +824,12 @@ iso_checksum_type: sha512</code></pre>
 <span class="Special">my</span> <span class="Identifier">$</span><span class="Identifier">yaml</span> <span class="Statement">=</span> <span class="Normal">save-yaml</span>(<span class="Identifier">$</span><span class="Identifier">cfg</span>)<span class="Statement">;</span>
 <span class="Identifier">say</span> <span class="Identifier">$</span><span class="Identifier">yaml</span><span class="Statement">;</span>
 </code></pre>
+
+<div class="notes">
+
+<p>Done for the initial file, but don't forget the quoting problem.</p>
+
+</div>
 </div>
 </div>
 <div id="perl_02_packergen1" class="slide small" data-transition="none">
@@ -829,6 +970,19 @@ iso_checksum_type: sha512</code></pre>
 <li>Support other tools - AWS and HashiCorp love JSON, I don't</li>
 <li>Full tool wrapper / DSL where it's useful</li>
 </ul>
+
+<div class="notes">
+
+<p>"Dynamic templating" means more advanced variable expansions, macros, etc.</p>
+
+<p>People have written lots of similar tools for CloudFormation, but AWS uses JSON
+all over the place.</p>
+
+<p>Some people throw around the term "DSL" really freely. Here it means a real
+workflow configuration language (maybe using a Grammar), not just JSON or Ruby
+with a library.</p>
+
+</div>
 </div>
 </div>
 <div id="closing_01_closing2" class="slide " data-transition="none">
@@ -837,7 +991,15 @@ iso_checksum_type: sha512</code></pre>
 
 <p><a href="https://github.com/mkheironimus/packergen" target="_blank">https://github.com/mkheironimus/packergen</a></p>
 
-<p><a href="http://mkheironimus.github.io/slides/20160316-packergen/" target="_blank">http://mkheironimus.github.io/slides/20160316-packergen/</a></p>
+<p><a href="https://mkheironimus.github.io/slides/20160316-packergen.pdf" target="_blank">https://mkheironimus.github.io/slides/20160316-packergen.pdf</a></p>
+
+<div class="notes">
+
+<p>Code and presentation available online.</p>
+
+<p>Pause for questions, comments, and tomatoes.</p>
+
+</div>
 </div>
 </div>
 </div>
