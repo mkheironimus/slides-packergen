@@ -4,7 +4,7 @@ Slide deck describing [packergen](https://github.com/mkheironimus/packergen).
 This is a [ShowOff](https://github.com/puppetlabs/showoff) presentation.
 
 You can also view this presentation [in your
-browser](http://mkheironimus.github.io/slides-packergen/). Move through the
+browser](https://mkheironimus.github.io/slides-packergen/). Move through the
 slides using the arrow keys.
 
 Ever had a tool you loved with a configuration file you hated? Perl's simple
