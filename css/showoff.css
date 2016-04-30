@@ -1,3 +1,40 @@
+body {
+  font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+  color: #222;
+}
+
+h1,
+h2,
+h3 {
+  margin: 8px 0;
+  padding: 0 8px;
+  font-weight: normal;
+}
+
+h1:first-child {
+  border-bottom: 3px solid #222;
+}
+
+pre {
+  margin: 1em 40px;
+  padding: .25em;
+}
+
+/* applies to inline code only */
+code {
+  padding: 2px 4px;
+  font-size: 1.1em;
+  background-color: #ededed;
+  border-radius: 4px;
+}
+
+pre code {
+  display: block;
+  padding: unset;
+  border-radius: unset;
+  overflow: hidden;
+}
+
 @media screen {
   /* explicitly size parent elements so the screen blanker works */
   html, body{
@@ -5,37 +42,25 @@
   }
 
   body {
-      font-size: 100%;
-      font-family: "Gill Sans", Helvetica, Arial, sans-serif;
-      background:#333;
-      overflow:hidden;
-      margin:0;
-      padding:0;
+    margin:0;
+    padding:0;
   }
 
-  /* UI elements */
-  #topbar,
-  #sidebar,
-  #statusbar,
-  #bottom,
-  #feedbackSidebar {
-    font-family: 'Open Sans', 'Lucida Grande', helvetica, arial, sans-serif;
-    font-size: 0.55em;
+  #preso,
+  .slide {
+    background: #fff;
+    width: 1024px;
+    height: 768px;
+    margin-left:auto;
+    margin-right:auto;
+    overflow:hidden;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
   }
 
-  #preso, .slide {
-      background: #fff;
-      width: 1024px;
-      height: 768px;
-      margin-left:auto;
-      margin-right:auto;
-      overflow:hidden;
-      -webkit-box-shadow:0 0 25px rgba(0,0,0,0.35);
-      -moz-box-shadow:0 0 25px rgba(0,0,0,0.35);
-      box-shadow:0 0 25px rgba(0,0,0,0.35);
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: cover;
+  .slide {
+    font-size: 1.5em;
   }
 
   #preso, .slide.background-fit {
@@ -43,24 +68,16 @@
   }
 
   #footer {
-      background: rgba(221,221,221,0.75);
-      color:#333;
-      padding: 2px 5px;
-      width: 1005px;
-      height: 20px;
-      line-height:20px;
-      font-size:14px;
-      position:relative;
-      top:-24px;
-      margin:0 auto;
-      -webkit-border-top-left-radius: 3px;
-      -webkit-border-top-right-radius: 3px;
-      -moz-border-radius-topleft: 3px;
-      -moz-border-radius-topright: 3px;
-      border-top-left-radius: 3px;
-      border-top-right-radius: 3px;
-      z-index: 2147483647; /* max, see http://www.puidokas.com/max-z-index/ */
-      display: none;
+    background-color: #f2f2f2;
+    -webkit-box-shadow:0 0 25px rgba(0,0,0,0.35);
+    -moz-box-shadow:0 0 25px rgba(0,0,0,0.35);
+    box-shadow:0 0 25px rgba(0,0,0,0.35);
+    padding: 4px 8px;
+    width: 100%;
+    position:fixed;
+    bottom: 0;
+    z-index: 2147483647; /* max, see http://www.puidokas.com/max-z-index/ */
+    display: none;
   }
   #followMode {
     display: none;
@@ -75,18 +92,9 @@
       display: none;
       margin: auto;
       color: white;
-      font-size: 2em;
       padding: 1em;
       z-index: 2147483647; /* max, see http://www.puidokas.com/max-z-index/ */
       text-align: center;
-  }
-  .content {
-    position: relative;
-    /* for some reason, setting top to 50% is pushing the content too far down, no idea why */
-    top: 42%;
-    -webkit-transform: translateY(-50%);
-    -ms-transform: translateY(-50%);
-    transform: translateY(-50%);
   }
 
   /* prevent large images from getting too out of hand */
@@ -96,96 +104,97 @@
   }
 }
 
-.slide .center {
-  text-align: center;
-}
-
 /* plain (non-bullet) text */
 .content > p,
 .content > form > p {
-    font-size: 2em;
-    margin: 1em;
-    text-align: center;
+  margin: 1em;
 }
 
-.content > pre,
-.content > form > pre {
-    font-size: 300%;
-}
 .content > blockquote,
 .content > form > blockquote {
-    font-size: 250%;
-    margin: 2em;
+  margin: 2em;
 }
 
-.center img {
-    display:block;
-    margin-left:auto;
-    margin-right:auto;
+.content img {
+  display:block;
+  margin-left:auto;
+  margin-right:auto;
 }
 
-/* numbered lists are numbered */
-.content ol {
-    margin-left: 40px;
-    font-size: 3em;
-    text-align: left;
-    padding-left: 40px;
-}
-.content ol > li {
-    list-style: decimal;
-    display: list-item;
+.cover h1 {
+  border: none;
 }
 
-
-/* ironically, normal lists have bullets and 'bullets' lists don't */
-.content > ul,
-.content > form > ul {
-    list-style: disc;
-    font-size: 3em;
-    text-align: left;
-    padding-left: 40px;
+.slide .center,
+#slides.supplemental .slide .center {
+  position: relative;
+  /* for some reason, setting top to 50% is pushing the content too far down, no idea why */
+  top: 42%;
+  -webkit-transform: translateY(-50%);
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
 }
-.content > ul > li,
-.content > form > ul > li {
-    padding: .5em;
-    margin-left: 40px;
+
+.center h1,
+.center h2,
+.center h3,
+.center h4,
+.center h5,
+.center h6,
+#slides.supplemental .slide .center h1,
+#slides.supplemental .slide .center h2,
+#slides.supplemental .slide .center h3,
+#slides.supplemental .slide .center h4,
+#slides.supplemental .slide .center h5,
+#slides.supplemental .slide .center h6
+{
+  text-align: center;
+}
+
+.small {
+    font-size: 80%;
+}
+
+.smaller {
+    font-size: 70%;
+}
+
+/**********************************
+ ***       List styling         ***
+ **********************************/
+
+.content > ol,
+.content > ul {
+  margin-left: 2em;
+}
+
+.content ol > li,
+.content > ul li,
+.content > form > ul li {
+  margin: .5em;
 }
 
 /* ironically, normal lists have bullets and 'bullets' lists don't */
 .bullets > ul {
-    list-style: none;
-	font-size: 3em;
-	padding-left: 0px;
+  list-style: none;
+  padding-left: 0px;
 }
 .bullets > ul > li {
-    text-align: center;
-    padding: 25px;
+  text-align: center;
+  padding: 25px;
 }
-.smbullets > ul {
-    font-size: 2.5em;
-}
+
 .smbullets > ul > li {
-    text-align: center;
-    padding: 10px;
+  text-align: center;
+  padding: 10px;
 }
 
-/* nested lists get their bullets back */
-.content ul ul,
-.content ol ul {
-  list-style: disc;
-  margin: 10px 10px;
-  padding-left: 40px;
-  text-align: left;
+.bullets ul ul > li {
+  font-size: 80%;
 }
 
-.bullets ul ul > li { font-size: 80%; }
-
-.content ul li.incremental.hidden {
+.content .incremental.hidden {
   visibility: hidden;
-}
-
-.commandline pre {
-    font-size: 2em;
 }
 
 .commandline code.command {
@@ -198,64 +207,26 @@
 
 .command h1 {
     white-space: pre;
-    font-family: monospace;
-    font-size: 3em;
 }
 
 .code {
     white-space: pre;
-    font-family: monospace;
-}
-
-.subsection h1 {
-    background: #008;
-    color: #fff;
-    padding: .25em;
-}
-
-.small {
-    font-size: 80%;
-}
-
-.smaller {
-    font-size: 70%;
-}
-
-h1,h2,h3 { font-weight: normal; text-align: center; margin: 0.5em 0; }
-h1 { font-size: 5em; }
-h2 { font-size: 3em; }
-h3 { font-size: 2em; }
-
-/* make this invisible as possible, while still rendering so that wkhtmltopdf doesn't ignore it */
-.content h1.section_title {
-  color: transparent !important;
-  opacity: 0 !important;
-  font-size: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-pre { margin: 1em 40px; padding: .25em; }
-
-#navigation.hidden,
-#stylepicker.hidden {
-  position:absolute; top:0; left:-9999px; width:1px; height:1px; overflow:hidden;
 }
 
 .notes, .handouts, .instructor, .solguide { display: none }
-.buttonNav { display: none }
+
 .offscreen { position:absolute; top:0; left:-9999px; overflow:hidden; }
-#debugInfo { margin-left: 30px; }
-#notesInfo { margin-left: 30px; display: none }
+
+#debugInfo,
 #slideFilename {
-  position: absolute;
-  right: 5px;
-  bottom: 0px;
-  height: 23px;
-  padding-left: 10px;
-  background: #ccc;
-  z-index: 2147483647;
+  margin-left: 30px;
 }
+
+#notesInfo {
+  margin-left: 30px;
+  display: none;
+}
+
 img#disconnected {
   float: right;
   display: none;
@@ -272,6 +243,7 @@ img#disconnected {
 #help {
   display: none;
   position:absolute;
+  overflow: auto;
   top: 5%;
   left: 25%;
   width: 50%;
@@ -283,6 +255,7 @@ img#disconnected {
   -moz-box-shadow:0 0 25px rgba(0,0,0,0.35);
   box-shadow:0 0 25px rgba(0,0,0,0.35);
   background-color: #fff;
+  font-size: 0.75em;
 }
 
   #help div {
@@ -290,7 +263,6 @@ img#disconnected {
   }
 
     #help h1 {
-      font-size: 1.25em;
       border-bottom: 2px solid #ccc;
     }
 
@@ -311,7 +283,6 @@ img#disconnected {
 
     #help .action {
       width: 15%;
-      font-size: 0.75em;
       color: gray;
     }
 
@@ -337,14 +308,12 @@ img#disconnected {
   width: 50%;
   border-radius: 0 0 .5em .5em;
   border-bottom: 8px solid #222222;
-  font-size: .65em;
   background-color: #222222;
   overflow: auto;
 }
 
   #presenterPopup h1,
   #presenterPopup h3 {
-   font-size: 2em;
    color: #ffffff;
   }
 
@@ -356,7 +325,6 @@ img#disconnected {
   #presenterPopup ul#downloads {
     margin-left: 0;
     list-style-type: none;
-    font-size: 1.25em;
   }
 
 /**********************************
@@ -364,148 +332,175 @@ img#disconnected {
  **********************************/
 
 .content table {
-    margin-left: auto;
-    margin-right: auto;
-    border-collapse:collapse;
-    width: 80%;
-    font-size: 1.7em;
+  margin-left: auto;
+  margin-right: auto;
+  border-collapse:collapse;
+  width: 90%;
+  font-size: .9em;
 }
 
-.content.small table {
-    font-size: 1.6em;
-    width: 90%;
-}
-.content.smaller table {
-    font-size: 1.5em;
-    width: 95%;
+.content thead {
+  border-bottom: 2px solid #ccc;
 }
 
-.content table th {
-    border-bottom: 2px solid #ccc;
-    padding: 0.5em;
-    font-weight: bold;
+.content tr:not(:last-child) {
+  border-bottom: 1px solid #ccc;
 }
 
-.content table tr td {
-    border-right: 1px solid #eee;
-    border-bottom: 1px solid #efefef;
-    text-align: center;
-    padding: 0.5em;
+.content tbody tr:nth-child(2n+1) {
+  background-color: #f9f9f9;
 }
 
-.content table tr td:last-child {
-    border-right: none;
+.content td {
+  padding: .25em .5em;
 }
 
-.content table li {
-    list-style-type: disc;
+.content td:first-child {
+  border-right: 2px solid #ccc;
 }
-
 
 /**********************************
  ***      Sidebar styling       ***
  **********************************/
-
-#feedbackWrapper {
-  float: left;
-  height: 100%;
+#hamburger {
   position: fixed;
-  background-color: #dfdfdf;
-  opacity: 0.98;
-  z-index: 2147483647; /* max, see http://www.puidokas.com/max-z-index/ */
+  padding: 4px 8px;
+  opacity: .05;
+  border-radius: .1em;
+  transition: all .2s;
+  z-index: 2147483647;
+  float: left;
 }
 
-#feedbackSidebar {
-  height: 100%;
-  width: 200px;
-  background: transparent url(grippy-close.png) no-repeat right center;
-  display: none;
+#hamburger:hover {
+  opacity: 1;
+  background-color: #337ab7;
+  color: #ffffff;
 }
 
-#feedbackSidebar img#feedbackActivity {
+#sidebarExit {
   position: absolute;
-  right: 3px;
-  top: 3px;
+  height: 100%;
+  width: 100%;
+  left: 240px;
+  z-index: 2147483647;
+}
+
+#feedbackSidebar,
+#sidebarExit,
+.submenu {
   display: none;
 }
 
-#feedbackHandle {
+.sideMenu {
+  position: absolute;
   height: 100%;
-  width: 9px;
-  background: transparent url(grippy.png) no-repeat center;
+  width: 240px;
+  background-color: #ffffff;
+  box-shadow:0 0 25px rgba(0,0,0,0.35);
+  overflow: auto;
+  z-index: 2147483647;
 }
 
-#feedbackSidebar div.row {
-  text-align: center;
-  margin: 5px 0;
-  padding: 5px 0;
-}
-
-#feedbackWrapper h4 {
-  text-align: left;
-  margin-left: 3px;
-}
-#feedbackSidebar span.buttonWrapper {
-  height: 60px;
-  width: 85px;
-  padding: 5px;
-  display: inline-block;
-}
-#feedbackSidebar span.buttonWrapper button {
-  margin: 44px auto 0 auto;
-}
-
-#feedbackSidebar span.buttonWrapper.slower {
-  background: transparent url(slow.png) no-repeat center top;
-}
-
-#feedbackSidebar span.buttonWrapper.faster {
-  background: transparent url(fast.png) no-repeat center top;
-}
-
-#feedbackSidebar textarea {
-  height: 85px;
-  width: 85%;
-}
-
-#feedbackSidebar div.row > button {
+.sideMenu textarea {
+  min-height: 80px;
   width: 90%;
-  margin: auto 5%;
+  margin: 8px;
+  border-color: #dddddd;
+  border-radius: .3em;
 }
 
-.fg-menu-container {
-  z-index: 2147483647; /* max, see http://www.puidokas.com/max-z-index/ */
-  font-size: 0.8em;
+.sideMenu p {
+  text-align: center;
+  margin: 0;
 }
 
-.fg-button { clear:left; margin:0 4px 40px 20px; padding: .4em 1em; text-decoration:none !important; cursor:pointer; position: relative; text-align: center; zoom: 1; }
-.fg-button .ui-icon { position: absolute; top: 50%; margin-top: -8px; left: 50%; margin-left: -8px; }
-a.fg-button { float:left; }
-.fg-button-icon-right { padding-right: 2.1em; }
-.fg-button-icon-right .ui-icon { left: auto; right: .2em; margin-left: 0; }
-
-.fg-button.ui-state-loading .ui-icon { background: url(spinner_bar.gif) no-repeat 0 0; }
-
-#navmenu {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  width: 50px;
-  font-size: 0.8em;
-  z-index: 2147483647; /* max, see http://www.puidokas.com/max-z-index/ */
+.sideMenu i {
+  margin-right: 8px;
 }
+
+.buttonWrapper {
+  line-height: 48px;
+  padding: 0 16px;
+  font-weight: bold;
+}
+
+.buttonWrapper:hover,
+.submenu a:hover,
+.submenu .highlighted a {
+  background-color:#337ab7;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.buttonWrapper.split {
+  float: left;
+  width: 50%;
+  line-height: 30px;
+  margin: 12px 0;
+  padding: 0;
+  text-align: center;
+}
+
+.buttonWrapper.split i {
+  margin-right: 0;
+}
+
+.submenu .buttonWrapper{
+  display: inline-block;
+  width: 90%;
+  margin: 0 5%;
+  padding: 0;
+  background-color: #337ab7;
+  border: 1px solid #2e6da4;
+  color: #ffffff;
+  border-radius: 4px;
+  text-align: center;
+  line-height: 36px;
+}
+
+.submenu .buttonWrapper:hover {
+  background-color: #286090;
+  border-color: #204d74;
+}
+
+.submenu ul {
+  font-size: .9em;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.submenu a {
+  display: block;
+  color: #000;
+  text-decoration: none;
+}
+
+.submenu a i {
+  float: right;
+}
+
+.navSection {
+  border-top: 1px solid #ccc;
+  padding: .8em;
+}
+
+.navItem {
+  padding: .5em 1.5em;
+}
+
+/* End Sidebar styling */
 
 .results {
   background-color:#002200;
   color:#00AA00;
-  font-size:2em;
   border:2px solid black;
   position: fixed;
   top:0px;
   width:100%;
   padding:15px;
   margin:0px;
-  font-family: monospace;
   z-index: 2147483647; /* max, see http://www.puidokas.com/max-z-index/ */
 }
 
@@ -517,8 +512,8 @@ a.fg-button { float:left; }
 /* Add a Shell "code highlighting" style to resemble the look of a terminal window. */
 .content pre.highlight code.language-shell {
   display: block;
-  background-color: black;
-  color: green;
+  background-color: #111;
+  color: #00ff40;
   border: 2px solid #ddd;
   padding: 0.5em;
   overflow: hidden;
@@ -547,7 +542,6 @@ code.executing:hover {
   display:inline;
   background-color:#000;
   color:#fff;
-  font-size:3em;
   border:2px solid black;
   position: fixed;
   padding:25px;
@@ -578,93 +572,85 @@ code.executing:hover {
 /**********************************
  ***       form widgets         ***
  **********************************/
-.content div.form.element {
-    text-align: left;
-    padding-left: 40px;
+form .element {
+  font-size: .8em;
+  width: 90%;
+  margin: 0 auto;
 }
-.content div.form.element label {
-  margin-right: 0.5em;
+
+.element input + label,
+.element label + input,
+.element select {
+  margin-left: 0.5em;
 }
-.content div.form.element select {
-  font-size: 2em;
-}
-.content div.form.element textarea {
+
+.element textarea {
   display: block;
   width: 85%;
 }
-.content div.form.element ul {
-  list-style: disc;
+
+.element ul {
+  list-style: none;
+  margin-top: 0;
 }
-.content div.form.element ul > li {
-  margin-left: 40px;
+
+.element input[type=checkbox],
+.element input[type=radio] {
+  font-size: 1em;
+  width: 1em;
+  height: 1em;
 }
-/* TODO: not sure why the preview window honks things up */
-#preview .content div.form.element select {
-  font-size: 0.8em;
-}
-.content div.form.element.warning {
+
+.warning {
   background-color: #ff7373;
 }
-.content form div.tools {
+.tools {
   position: absolute;
   bottom: 40px;
   right: 20px;
 }
-.content form div.tools * {
-  float: right;
+
+.tools input[type=submit],
+.tools input[type=button] {
+  height: 24px;
+  font-size: .6em;
+  border: none;
 }
-.content form div.tools input[type=submit],
-.content form div.tools input[type=button] {
-  margin: 1em;
-  font-size: 2em;  
+.tools input[type=submit].dirty {
+  color: #fff;
+  background-color: #2e6da4;
 }
-.content form div.tools input[type=submit].dirty {
-  color: red;
-}
-.content form div.tools input[type=button].display {
+.tools input[type=button].display {
   display: none;
 }
 
-div.rendered.form {
+.rendered {
   border: 1px solid #ccc;
   border-radius: 0.5em;
   margin: 1em;
-  padding: 0.25em;
+  padding: 0.25em 0.25em 0.25em .5em;
   min-height: 3em;
 }
-div.rendered.form.element {
-  position: relative; /* for absolutely positioning children */
-  padding-left: 0.5em;
-}
-div.rendered.form label {
-  display: block;
-  font-weight: bold;
+
+.rendered label {
   border-bottom: 1px solid #999;
 }
-div.rendered.form .item {
-  display: block;
-  width: 0;
-/*   overflow: hidden; */
+.rendered .item {
   height: 1.25em;
   white-space: nowrap;
-  opacity: 0.5;
-  border-radius: 0 0.5em 0.5em 0;
-  margin: 2px 0;
+  background-color: #f2dede;
+  border: 1px solid #f45f5f;
+  border-left: none;
+  border-radius: 0 0.4em 0.4em 0;
 }
-div.rendered.form .item.correct {
-  font-weight: 900;
-  border-left: 4px solid black;
-  opacity: 1.0;
+.rendered .item.correct {
+  background-color: #dff0d8;
+  border: 1px solid #00AA00;
+  border-left: none;
 }
-div.rendered.form span.count {
+.count {
   display: none;
 }
-
-div.rendered.form .item.barstyle0 { background-color: #bb73bb; }
-div.rendered.form .item.barstyle1 { background-color: #59b859; }
-div.rendered.form .item.barstyle2 { background-color: #e3742f; }
-div.rendered.form .item.barstyle3 { background-color: #48a2ee; }
-div.rendered.form .item.barstyle4 { background-color: #f75d5d; }
 
 #notes .form.wrapper {
   display: none;
@@ -680,42 +666,20 @@ div.rendered.form .item.barstyle4 { background-color: #f75d5d; }
   width: 8.1in;
 }
 
-.supplemental h1 { font-family: 'Arvo'; text-align: left; }
+.supplemental h1,
 .supplemental h2,
     .supplemental h3,
     .supplemental h4,
     .supplemental h5,
-    .supplemental h6 { font-family: 'PT Sans'; text-align: left; }
-
-.supplemental h1 { font-size: 2em; }
-.supplemental h2 { font-size: 1.5em; }
-.supplemental h3,
-    .supplemental h4,
-    .supplemental h5,
-    .supplemental h6 { font-size: 1.3em; text-align: left; }
-
-.supplemental .content > p,
-    .supplemental .content > ol,
-    .supplemental .content > ul { font-size: 1em; }
+    .supplemental h6 { text-align: left; }
 
 .supplemental img { max-width: 7in; }
-.supplemental .content > pre,
-  .supplemental .content > pre > code { font-size: 10pt; font-family: 'Courier New', Courier, monospace; }
+
 .supplemental ul { list-style: disc; margin-left: 1.25em !important; padding-left: inherit !important; }
-.supplemental .content table { font-size: 0.65em; } /* Ugly hack for tables, which never seem to scale properly. Ick */
 
 /* downloads page */
-/* we want scrolls! */
-body#download {
-  overflow:auto;
-  height: auto;
-}
-body#download h1 {
-  font-size: 3em;
-}
 body#download ul#downloads {
     margin-left:  20%;
-    font-size: large;
     list-style-type: disc;
 }
 body#download ul#downloads li {
@@ -725,11 +689,6 @@ body#download ul#downloads li {
 /**********************
  ***   stats page   ***
  **********************/
-/* we want scrolls! */
-body#stats {
-  overflow:auto;
-  height: auto;
-}
 
 /* apply some nifty rounding styles to the row */
 #stats div.row {
@@ -814,6 +773,39 @@ body#stats {
  *** end stats page ***
  **********************/
 
+ /**********************
+ ***    Callouts    ***
+ **********************/
+
+ .callout {
+   padding: 12px 0;
+   min-height: 2em;
+   border: 1px solid #222;
+   border-radius: 4px;
+   background-color: transparent; /* because there's a warning class with a red background */
+ }
+
+ .callout:before {
+   font-family: FontAwesome;
+   font-style: normal;
+   font-weight: normal;
+   font-size: 2em;
+   text-decoration: inherit;
+   padding: 0 8px;
+   float: left;
+ }
+
+ .callout.info:before     { content: "\f05a"; } /* fa-info-circle */
+ .callout.warning:before  { content: "\f071"; } /* fa-exclamation-triangle */
+ .callout.question:before { content: "\f059"; } /* fa-question-circle */
+ .callout.exercise:before { content: "\f41b"; } /* fa-pencil-square */
+ .callout.stop:before     { content: "\f05e"; } /* fa-ban */
+
+ /**********************
+ ***  end callouts   ***
+ **********************/
+
+
 /* iPhone */
 /* Portrait */
 @media screen and (max-width: 320px)
@@ -837,61 +829,26 @@ body#stats {
 
 }
 
-/* Landscape */
-/*
-@media screen and (max-width: 480px)
-{
-  #preso {
-      margin: 0;
-      padding: 0;
-      width: 480px;
-      margin-left:auto;
-      margin-right:auto;
-  }
-  #footer {
-      background: #eee;
-      margin: 0;
-      padding: 2px;
-      width: 480px;
-      height: 20px;
-      margin-left:auto;
-      margin-right:auto;
-  }
-}
-*/
-
 /** Print **/
 @media print {
-  body {
-    font-size: 70%;
+   #preso,
+  .slide:not(.center) {
+    max-height: inherit !important;
+    height: 100% !important; /* because otherwise handout notes are cutoff by the inline height set on the slide */
   }
 
-  #sidebarWrapper,
-  #sidebar,
-  #sidebarHandle {
-    display:none,
-
+  /* make this invisible as possible, while still rendering so that wkhtmltopdf doesn't ignore it */
+  h1.section_title {
+    color: transparent !important;
+    opacity: 0 !important;
+    font-size: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
-  #preso, .slide {
-    border: 1px solid #999;
-  }
-
-  .slide .center {
-    width: 800px;
-    height: 600px;
-    display: table-cell;
-    text-align: center;
-    vertical-align: middle;
-  }
-
-  #preso, .slide {
-      background: #fff;
-      width: 800px;
-      height: 600px;
-      margin-left:auto;
-      margin-right:auto;
-      overflow:hidden;
+  /* because the above section headers are h1 elements rendered only in print */
+  .content:not(.cover) h1:not(.section_title) {
+    border-bottom: 2px solid #222;
   }
 
   /* prevent large images from running off the page */
@@ -901,24 +858,37 @@ body#stats {
   }
 
   #footer {
-      background: #eee;
-      padding: 2px;
-      width: 590px;
-      height: 20  px;
-      margin-left:auto;
-      margin-right:auto;
+    background: #eee;
+    padding: 2px;
+    width: 590px;
+    height: 20  px;
+    margin-left:auto;
+    margin-right:auto;
   }
 
-  pre, code {
-    font-family: Monaco, monospace;
+  /* Styling to make the handout notes appear in the printed output. */
+  .handouts {
+    display: block;
+    clear: both;
+    padding-top: 1em;
+  }
+
+  /* prepend the first element of the .handouts div with Notes: */
+  .handouts > :first-child:before {
+    display: block;
+    font-weight: bold;
+    content: "Notes:";
+    border-top: 2px dashed #999;
+    padding: 0.25em 0 0.5em 0;
   }
 
   /* page break styling */
-  div.break {
+  .pagebreak {
     page-break-after: always;
     font-size: small;
     font-style: italic;
     padding-top: 0.25em;
     padding-bottom: 0.25em;
   }
+
 }

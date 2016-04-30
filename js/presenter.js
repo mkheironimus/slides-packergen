@@ -16,22 +16,6 @@ $(document).ready(function(){
   // the presenter window doesn't need the reload on resize bit
   $(window).unbind('resize');
 
-  // side menu accordian crap
-	$("#preso").bind("showoff:loaded", function (event) {
-		$(".menu > ul ul").hide()
-		$(".menu > ul a").click(function() {
-			if ($(this).next().is('ul')) {
-				$(this).next().toggle()
-			} else {
-				gotoSlide($(this).attr('rel'));
-				try { slaveWindow.gotoSlide($(this).attr('rel'), false) } catch (e) {}
-				postSlide();
-				update();
-			}
-			return false;
-		}).next().hide();
-	});
-
   $("#minStop").hide();
   $("#startTimer").click(function() { toggleTimer() });
   $("#stopTimer").click(function() { toggleTimer() });
@@ -90,7 +74,7 @@ function presenterPopupToggle(page, event) {
     $.get(page, function(data) {
       var link = $('<a>'),
           content = $('<div>');
-      
+
       link.attr({
         href: page,
         target: '_new'
@@ -98,15 +82,15 @@ function presenterPopupToggle(page, event) {
       link.text('Open in a new page...');
 
       content.attr('id', page.substring(1, page.length));
-      content.append(link);      
+      content.append(link);
       content.append($(data).find('#wrapper').html());
       popup.append(content);
-      
+
       setupStats(); // this function is in showoff.js because /stats does not load presenter.js
-      
+
       $('body').append(popup);
-      popup.slideDown(200); // #presenterPopup is display: none by default      
-    }); 
+      popup.slideDown(200); // #presenterPopup is display: none by default
+    });
   }
 }
 
@@ -208,11 +192,6 @@ function openNext()
     catch(e) {
       console.log('Failed to open or connect next window. Popup blocker?');
     }
-
-    // Set up a maintenance loop to keep the connection between windows. I wish there were a cleaner way to do this.
-    //if (typeof maintainNext == 'undefined') {
-    //  maintainNext = setInterval(openNext, 1000);
-    //}
   }
   else {
     try {
@@ -252,6 +231,17 @@ function openNotes()
     catch (e) {
       console.log('Notes window failed to close properly.');
     }
+  }
+}
+
+function printSlides()
+{
+  try {
+    var printWindow = window.open('/print');
+    printWindow.window.print();
+  }
+  catch(e) {
+    console.log('Failed to open print window. Popup blocker?');
   }
 }
 
@@ -297,37 +287,15 @@ function updatePace() {
   var position = Math.max(Math.min(sum, 90), 10); // between 10 and 90
   $("#paceMarker").css({ left: position+"%" });
 
-  if(position > 75) { 
+  if(position > 75) {
     $("#paceFast").show();
-  } else { 
+  } else {
     $("#paceFast").hide();
   }
-  if(position < 25) { 
-    $("#paceSlow").show(); 
-  } else { 
-    $("#paceSlow").hide(); 
-  }
-}
-
-function zoom()
-{
-  if(window.innerWidth <= 480) {
-    $(".zoomed").css("zoom", 0.32);
-  }
-  else {
-    var hSlide = parseFloat($("#preso").height());
-    var wSlide = parseFloat($("#preso").width());
-    var hPreview = parseFloat($("#preview").height());
-    var wPreview = parseFloat($("#preview").width());
-    var factor = parseFloat($("#zoomer").val());
-
-    newZoom = factor * Math.min(hPreview/hSlide, wPreview/wSlide) - 0.04;
-
-    $(".zoomed").css("zoom", newZoom);
-    $(".zoomed").css("-ms-zoom", newZoom);
-    $(".zoomed").css("-webkit-zoom", newZoom);
-    $(".zoomed").css("-moz-transform", "scale("+newZoom+")");
-    $(".zoomed").css("-moz-transform-origin", "left top");
+  if(position < 25) {
+    $("#paceSlow").show();
+  } else {
+    $("#paceSlow").hide();
   }
 }
 
@@ -337,6 +305,9 @@ gotoSlide = function (slideNum)
 {
     origGotoSlide.call(this, slideNum)
     try { slaveWindow.gotoSlide(slideNum, false) } catch (e) {}
+    if ( !mobile() ) {
+      $("#navigation li li").get(slidenum).scrollIntoView();
+    }
     postSlide()
 }
 
@@ -392,11 +363,6 @@ function presPrevStep()
 
 function presNextStep()
 {
-/*  // I don't know what the point of this bit was, but it's not needed.
-    // read the variables set by our spawner
-    incrCurr = slaveWindow.incrCurr
-    incrSteps = slaveWindow.incrSteps
-*/
   nextStep();
 	try { slaveWindow.nextStep(false) } catch (e) {};
   try { nextWindow.gotoSlide(nextSlideNum()) } catch (e) {};
@@ -589,10 +555,3 @@ function toggleUpdater()
   mode.update = $("#followerToggle").attr("checked");
   update();
 }
-
-/*
-// redefine defaultMode
-defaultMode = function() {
-  return mobile() ? modeState.follow : modeState.passive;
-}
-*/

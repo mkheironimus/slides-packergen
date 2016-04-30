@@ -46,6 +46,7 @@ function setupPreso(load_slides, prefix) {
 	loadSlides(loadSlidesBool, loadSlidesPrefix)
 
   loadKeyDictionaries();
+  setupSideMenu();
 
 	doDebugStuff()
 
@@ -62,44 +63,18 @@ function setupPreso(load_slides, prefix) {
 
   // make sure that the next view doesn't bugger things on the first load
   if(query.next == 'true') {
-    $('#preso').addClass('zoomed');
     mode.next = true;
-    zoom();
   }
 
   // Make sure the slides always look right.
   // Better would be dynamic calculations, but this is enough for now.
-  $(window).resize(function(){location.reload();});
-
-  $("#feedbackWrapper").hover(
-    function() {
-      $('#feedbackSidebar').show();
-      toggleKeybinding();
-    },
-    function() {
-      $('#feedbackSidebar').hide();
-      toggleKeybinding();
-    }
-  );
-
-  $("#paceSlower").click(function() { sendPace('slower'); });
-  $("#paceFaster").click(function() { sendPace('faster'); });
-  $("#askQuestion").click(function() { askQuestion( $("textarea#question").val()) });
-  $("#sendFeedback").click(function() {
-    sendFeedback($( "input:radio[name=rating]:checked" ).val(), $("textarea#feedback").val())
-  });
-  $("#editSlide").click(function() { editSlide(); });
+  zoom();
+  $(window).resize(function() {zoom();});
 
   // Open up our control socket
   if(mode.track) {
     connectControlChannel();
   }
-/*
-  ws           = new WebSocket('ws://' + location.host + '/control');
-  ws.onopen    = function()  { connected();          };
-  ws.onclose   = function()  { disconnected();       }
-  ws.onmessage = function(m) { parseMessage(m.data); };
-*/
 }
 
 function loadSlides(load_slides, prefix, reload) {
@@ -130,7 +105,7 @@ function loadKeyDictionaries () {
 
 function initializePresentation(prefix) {
 	// unhide for height to work in static mode
-        $("#slides").show();
+  $("#slides").show();
 
 	//copy into presentation area
 	$("#preso").empty()
@@ -197,47 +172,155 @@ function initializePresentation(prefix) {
 	$("#preso").trigger("showoff:loaded");
 }
 
-/* This looks like the zoom() function for the presenter preview, but it uses a different algorithm */
-function zoom()
-{
-  if(window.innerWidth <= 480) {
-    $(".zoomed").css("zoom", 0.32);
+function zoom() {
+  var preso = $("#preso");
+  var hSlide = parseFloat(preso.height());
+  var wSlide = parseFloat(preso.width());
+  var hBody  = parseFloat(preso.parent().height());
+  var wBody  = parseFloat(preso.parent().width());
+
+  var newZoom = Math.min(hBody/hSlide, wBody/wSlide);
+  // Because Firefox's transform doesn't scale up very well
+  newZoom = newZoom > 1 ? 1 : newZoom - .04;
+
+  preso.css("zoom", newZoom);
+  preso.css("-ms-zoom", newZoom);
+  preso.css("-webkit-zoom", newZoom);
+  // Firefox doesn't support zoom
+  // Don't use standard transform to avoid modifying Chrome
+  preso.css("-moz-transform", "scale(" + newZoom + ")");
+  preso.css("-moz-transform-origin", "0 0 0");
+}
+
+function setupSideMenu() {
+  $("#hamburger").click(function() {
+    $('#feedbackSidebar, #sidebarExit').toggle();
+    toggleKeybinding();
+
+  });
+
+  $("#navToggle").click(function() {
+      $("#navigation").toggle();
+  });
+
+  $('#fileDownloads').click(function() {
+    closeMenu();
+    window.open('/download');
+  })
+
+  $("#paceSlower").click(function() {
+    sendPace('slower');
+  });
+
+  $("#paceFaster").click(function() {
+    sendPace('faster');
+  });
+
+  $('#questionToggle').click(function() {
+    $('#questionSubmenu').toggle();
+  });
+  $("#askQuestion").click(function() {
+    askQuestion( $("#question").val());
+    feedback_response(this, "Sending...");
+  });
+
+  $('#feedbackToggle').click(function() {
+    $('#feedbackSubmenu').toggle();
+  });
+  $("#sendFeedback").click(function() {
+    sendFeedback($( "input:radio[name=rating]:checked" ).val(), $("#feedback").val());
+    feedback_response(this, "Sending...");
+  });
+
+  $("#editSlide").click(function() {
+    editSlide();
+    closeMenu();
+  });
+
+  $('#closeMenu, #sidebarExit').click(function() {
+    closeMenu();
+  });
+
+  function closeMenu() {
+    $('#feedbackSidebar, #sidebarExit').hide();
+    toggleKeybinding('on');
   }
-  else {
-    var hSlide = parseFloat($("#preso").height());
-    var wSlide = parseFloat($("#preso").width());
-    var hBody  = parseFloat($("html").height());
-    var wBody  = parseFloat($("html").width());
 
-    newZoom = Math.min(hBody/hSlide, wBody/wSlide) - 0.04;
-
-    $(".zoomed").css("zoom", newZoom);
-    $(".zoomed").css("-ms-zoom", newZoom);
-    $(".zoomed").css("-webkit-zoom", newZoom);
-    $(".zoomed").css("-moz-transform", "scale("+newZoom+")");
-    $(".zoomed").css("-moz-transform-origin", "left top");
+  function feedback_response(elem, response) {
+    var originalText = $(elem).text();
+    $(elem).text(response);
+    window.setTimeout(function() {
+      $(elem).parent().hide();
+      closeMenu();
+      $(elem).text(originalText);
+    }, 1000);
   }
 }
 
 function setupMenu() {
-	$('#navmenu').hide();
+  var nav = $("<ul>"),
+      currentSection = '',
+      sectionUL = '';
 
-	var currSlide = 0
-	var menu = new ListMenu()
+  slides.each(function(s, slide){
+    var slidePath = $(slide)
+      .find(".content")
+      .attr('ref')
+      .split('/')
+      .shift();
+    var headers = $(slide).children("h1, h2");
+    var slideTitle = '';
 
-	slides.each(function(s, elem) {
-		content = $(elem).find(".content")
-		shortTxt = $(content).text().substr(0, 20)
-		path = $(content).attr('ref').split('/')
-		currSlide += 1
-		menu.addItem(path, shortTxt, currSlide)
-	})
+    if (currentSection !== slidePath) {
+      currentSection = slidePath;
+      var newSection  = $("<li>");
+      var icon        = $('<i>')
+        .addClass('fa fa-angle-down');
+      var sectionLink = $("<a>")
+        .addClass('navSection')
+        .attr('href', '#')
+        .text(slidePath)
+        .append(icon)
+        .click(function() {
+          $(this).next().toggle();
+          return false;
+        });
+      sectionUL = $("<ul>");
+      newSection.append(sectionLink, sectionUL);
+      nav.append(newSection);
+    }
 
-	$('#navigation').html(menu.getList())
-	$('#navmenu').menu({
-		content: $('#navigation').html(),
-		flyOut: true
-	});
+    if (headers.length > 0) {
+      slideTitle = headers.first().text();
+    } else {
+      slideTitle = $(slide)
+        .find(".content")
+        .text()
+        .substr(0, 20);
+    }
+
+    var navLink = $("<a>")
+      .addClass('navItem')
+      .attr('rel', s)
+      .attr('href', '#')
+      .text((s + 1) + ". " + slideTitle)
+      .click(function() {
+          gotoSlide(s);
+          if (typeof slaveWindow !== 'undefined' && slaveWindow !== null) {
+              slaveWindow.gotoSlide(s, false);
+              postSlide();
+              update();
+          }
+          return false;
+      });
+    var navItem = $("<li>").append(navLink);
+
+    sectionUL.append(navItem);
+  });
+
+  // can't use .children.replaceWith() because this starts out empty...
+  $("#navigation").empty();
+  $("#navigation").append(nav);
 }
 
 function checkSlideParameter() {
@@ -369,21 +452,15 @@ function showSlide(back_step, updatepv) {
 
 	}
 
-  // Update presenter view nav for current slide
-  $( ".menu > ul > li > ul > li" ).each(function() {
-    if ($(this).text().split(". ")[0] == slidenum+1) {
-      $(".menu > ul > li > ul ").hide();  //Collapse nav
-      $(".menu > ul > li > ul > li").removeClass('highlighted');
-      $(this).addClass('highlighted'); //Highlight current menu item
-      $(this).parent().show();         //Show nav block containing current slide
+  // Update nav
+  $('.highlighted').removeClass('highlighted');
+  $('#navigation ul ul').hide();
 
-      if( ! mobile() ) {
-        $(this).get(0).scrollIntoView(); //Scroll so current item is at the top of the view
-      }
-    }
-  });
+  var active = $(".navItem").get(slidenum);
+  $(active).parent().addClass('highlighted');
+  $(active).parent().parent().show();
 
-	return ret;
+  return ret;
 }
 
 function getSlideProgress()
@@ -506,12 +583,12 @@ function renderForm(form) {
   var action = form.attr("action");
   $.getJSON(action, function( data ) {
     //console.log(data);
-    form.children('div.form.element').each(function() {
+    form.children('.element').each(function() {
       var key = $(this).attr('data-name');
 
       // add a counter label if we haven't already
-      if( $(this).has('span.count').length == 0 ) {
-        $(this).prepend('<span class="count"></span>');
+      if( $(this).next('.count').length === 0 ) {
+        $(this).after($('<h1>').addClass('count'));
       }
 
       $(this).find('ul > li > *').each(function() {
@@ -522,8 +599,6 @@ function renderForm(form) {
       });
 
       // replace all input widgets with spans for the bar chart
-      var max   = 5;
-      var style = 0;
       $(this).children(':input').each(function() {
         switch( $(this).attr('type') ) {
           case 'text':
@@ -537,16 +612,21 @@ function renderForm(form) {
           case 'radio':
           case 'checkbox':
             // Just render these directly and migrate the label to inside the span
-            var value   = $(this).attr('value');
             var label   = $(this).next('label');
-            var classes = $(this).attr('class');
             var text    = label.text();
+            var classes = $(this).attr('class');
 
             if(text.match(/^-+$/)) {
               $(this).remove();
-            }
-            else{
-              $(this).replaceWith('<div class="item barstyle'+style+' '+classes+'" data-value="'+value+'">'+text+'</div>');
+            } else {
+              var resultDiv = $('<div>')
+                .addClass('item')
+                .attr('data-value', $(this).attr('value'))
+                .text(text);
+              if (classes) {
+                resultDiv.addClass(classes);
+              }
+              $(this).replaceWith(resultDiv);
             }
             label.remove();
             break;
@@ -554,26 +634,26 @@ function renderForm(form) {
           default:
             // select doesn't have a type attribute... yay html
             // poke inside to get options, then render each as a span and replace the select
-            parent = $(this).parent();
+            var parent = $(this).parent();
 
             $(this).children('option').each(function() {
-              var value   = $(this).val();
               var text    = $(this).text();
               var classes = $(this).attr('class');
 
               if(! text.match(/^-+$/)) {
-                parent.append('<div class="item barstyle'+style+' '+classes+'" data-value="'+value+'">'+text+'</div>');
-
-                // loop style counter
-                style++; style %= max;
+                var resultDiv = $('<div>')
+                  .addClass('item')
+                  .attr('data-value', $(this).val())
+                  .text(text);
+                if (classes) {
+                  resultDiv.addClass(classes);
+                }
+                parent.append(resultDiv);
               }
             });
             $(this).remove();
             break;
         }
-
-        // loop style counter
-        style++; style %= max;
       });
 
       // only start counting and sizing bars if we actually have usable data
@@ -592,7 +672,7 @@ function renderForm(form) {
         });
 
         // insert the total into the counter label
-        $(this).find('span.count').each(function() {
+        $(this).next('.count').each(function() {
           $(this).text(total);
         });
 
@@ -956,51 +1036,6 @@ function swipeRight() {
   prevStep();
 }
 
-function ListMenu(s)
-{
-	this.slide = s
-	this.typeName = 'ListMenu'
-	this.itemLength = 0;
-	this.items = new Array();
-	this.addItem = function (key, text, slide) {
-		if (key.length > 1) {
-			thisKey = key.shift()
-			if (!this.items[thisKey]) {
-				this.items[thisKey] = new ListMenu(slide)
-			}
-			this.items[thisKey].addItem(key, text, slide)
-		} else {
-			thisKey = key.shift()
-			this.items[thisKey] = new ListMenuItem(text, slide)
-		}
-	}
-	this.getList = function() {
-		var newMenu = $("<ul>")
-		for(var i in this.items) {
-			var item = this.items[i]
-			var domItem = $("<li>")
-			if (item.typeName == 'ListMenu') {
-				choice = $("<a rel=\"" + (item.slide - 1) + "\" href=\"#\">" + i + "</a>")
-				domItem.append(choice)
-				domItem.append(item.getList())
-			}
-			if (item.typeName == 'ListMenuItem') {
-				choice = $("<a rel=\"" + (item.slide - 1) + "\" href=\"#\">" + item.slide + '. ' + item.textName + "</a>")
-				domItem.append(choice)
-			}
-			newMenu.append(domItem)
-		}
-		return newMenu
-	}
-}
-
-function ListMenuItem(t, s)
-{
-	this.typeName = "ListMenuItem"
-	this.slide = s
-	this.textName = t
-}
-
 var removeResults = function() {
 	$('.results').remove();
 
@@ -1052,7 +1087,6 @@ function executeCode() {
 // any code that can be run directly in the browser
 function executeLocalCode(lang, codeDiv) {
   var result = null;
-  var codeDiv = $(this);
 
   setExecutionSignal(true, codeDiv);
   setTimeout(function() { setExecutionSignal(false, codeDiv);}, 1000 );
@@ -1271,16 +1305,5 @@ function setupStats()
 
 /* Is this a mobile device? */
 function mobile() {
-/*
-  return ( navigator.userAgent.match(/Android/i)
-            || navigator.userAgent.match(/webOS/i)
-            || navigator.userAgent.match(/iPhone/i)
-            || navigator.userAgent.match(/iPad/i)
-            || navigator.userAgent.match(/iPod/i)
-            || navigator.userAgent.match(/BlackBerry/i)
-            || navigator.userAgent.match(/Windows Phone/i)
-  );
-*/
-
   return ( $(window).width() <= 480 )
 }
