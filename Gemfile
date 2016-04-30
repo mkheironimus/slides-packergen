@@ -1,4 +1,4 @@
 source 'https://rubygems.org'
-gem 'showoff', '~> 0.11.2'
+gem 'showoff', '~> 0.12.0'
 gem 'rmagick'
 gem 'pdfkit'
