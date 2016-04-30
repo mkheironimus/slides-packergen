@@ -2,6 +2,10 @@
   "name": "Human-Friendly Configuration",
   "description": "How I learned to stop worrying and love the JSON.",
   "author": "Michael Heironimus",
+  "url": "https://mkheironimus.github.io/",
+  "email": "heironimus@gmail.com",
+  "twitter": "mkheironimus",
+  "templates": { "default": "default.tpl" },
   "sections": [
     { "section": "intro" },
     { "section": "packer" },
