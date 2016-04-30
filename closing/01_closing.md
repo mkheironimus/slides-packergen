@@ -21,9 +21,9 @@ with a library.
 !SLIDE
 # That's all, folks!
 
-https://github.com/mkheironimus/packergen
+<https://github.com/mkheironimus/packergen>
 
-https://mkheironimus.github.io/slides/20160316-packergen.pdf
+<https://mkheironimus.github.io/slides-packergen/>
 
 ~~~SECTION:notes~~~
 

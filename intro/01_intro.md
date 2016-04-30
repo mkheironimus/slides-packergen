@@ -3,7 +3,13 @@
 
 ## or How I Learned to Stop Worrying and Love the JSON
 
-### Michael Heironimus
+~~~CONFIG:author~~~
+
+<~~~CONFIG:url~~~>
+
+<~~~CONFIG:email~~~>
+
+[@~~~CONFIG:twitter~~~](https://twitter.com/~~~CONFIG:twitter~~~)
 
 !SLIDE
 # A few words about me

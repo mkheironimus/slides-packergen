@@ -2,7 +2,7 @@
 # Packer
 * Open source from HashiCorp, just like Vagrant
 * Create disk images, Vagrant boxes, Docker images
-* http://packer.io/
+* <http://packer.io/>
 
 ~~~SECTION:notes~~~
 

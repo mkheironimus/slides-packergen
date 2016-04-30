@@ -3,7 +3,7 @@
 * Natural starting point: trivially converted to/from JSON
 * Easy syntax, quotes only where needed
 * Commenting
-* http://yaml.org/
+* <http://yaml.org/>
 
 ~~~SECTION:notes~~~
 
