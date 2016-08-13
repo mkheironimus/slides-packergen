@@ -5,6 +5,8 @@ var notesWindow = null;
 
 var paceData = [];
 
+section = 'notes'; // which section the presenter has chosen to view
+
 $(document).ready(function(){
   // set up the presenter modes
   mode = { track: true, follow: true, update: true, slave: false, next: false, notes: false};
@@ -16,9 +18,9 @@ $(document).ready(function(){
   // the presenter window doesn't need the reload on resize bit
   $(window).unbind('resize');
 
-  $("#minStop").hide();
-  $("#startTimer").click(function() { toggleTimer() });
-  $("#stopTimer").click(function() { toggleTimer() });
+  $("#startTimer").click(function() { startTimer()  });
+  $("#pauseTimer").click(function() { toggleTimer() });
+  $("#stopTimer").click(function()  { stopTimer()   });
 
   /* zoom slide to match preview size, then set up resize handler. */
   zoom();
@@ -83,7 +85,8 @@ function presenterPopupToggle(page, event) {
 
       content.attr('id', page.substring(1, page.length));
       content.append(link);
-      content.append($(data).find('#wrapper').html());
+      /* use .sibliings() because of how jquery formats $(data) */
+      content.append($(data).siblings('#wrapper').html());
       popup.append(content);
 
       setupStats(); // this function is in showoff.js because /stats does not load presenter.js
@@ -102,14 +105,14 @@ function reportIssue() {
 
 // open browser to remote edit URL
 function editSlide() {
-  var slide = $("span#slideFile").text().replace(/\/\d+$/, '');
+  var slide = $("span#slideFile").text().replace(/:\d+$/, '');
   var link  = editUrl + slide + ".md";
   window.open(link);
 }
 
 // call the edit endpoint to open up a local file editor
 function openEditor() {
-  var slide = $("span#slideFile").text().replace(/\/\d+$/, '');
+  var slide = $("span#slideFile").text().replace(/:\d+$/, '');
   var link  = '/edit/' + slide + ".md";
   $.get(link);
 }
@@ -134,6 +137,9 @@ function openSlave()
       // maintain the pointer back to the parent.
       slaveWindow.presenterView = window;
       slaveWindow.mode = { track: false, slave: true, follow: false };
+
+      // Add a class to differentiate from the audience view
+      slaveWindow.document.getElementById("preso").className = 'display';
 
       $('#slaveWindow').addClass('enabled');
     }
@@ -245,12 +251,31 @@ function printSlides()
   }
 }
 
-function askQuestion(question) {
-  $("#questions ul").prepend($('<li/>').text(question));
+function postQuestion(question, questionID) {
+  var questionItem = $('<li/>').text(question).attr('id', questionID);
 
-  $('#questions ul li:first-child').click( function(e) {
-    $(this).remove();
-  });
+  questionItem.click( function(e) {
+      markCompleted($(this).attr('id'));
+      removeQuestion(questionID);
+    });
+
+  $("#unanswered").append(questionItem);
+  updateQuestionIndicator();
+}
+
+function removeQuestion(questionID) {
+  var question = $("li#"+questionID);
+  question.toggleClass('answered')
+          .remove();
+  $('#answered').append($(question));
+  updateQuestionIndicator();
+}
+
+function updateQuestionIndicator() {
+  try {
+    slaveWindow.updateQuestionIndicator( $('#unanswered li').length )
+  }
+  catch (e) {}
 }
 
 function paceFeedback(pace) {
@@ -330,6 +355,10 @@ reconnectControlChannel = function() {
   });
 }
 
+function markCompleted(questionID) {
+  ws.send(JSON.stringify({ message: 'complete', questionID: questionID}));
+}
+
 function update() {
   if(mode.update) {
     var slideName = $("#slideFile").text();
@@ -390,7 +419,25 @@ function postSlide() {
       notes = notes.html();
     }
 
-		$('#notes').html(notes);
+    $('#notes').html(notes);
+
+    var sections = getCurrentSections();
+    if(sections.size() > 1) {
+      var ul = $('<ul>').addClass('section-selector');
+      sections.each(function(idx, value){
+        var li = $('<li/>').appendTo(ul);
+        var a  = $('<a/>')
+                      .text(value)
+                      .attr('href','javascript:setCurrentSection("'+value+'");')
+                      .appendTo(li);
+
+        if(section == value) {
+          li.addClass('selected');
+        }
+      });
+
+      $('#notes').prepend(ul);
+    }
 
     if (notesWindow && typeof(notesWindow) != 'undefined' && !notesWindow.closed) {
       $(notesWindow.document.body).html(notes);
@@ -478,67 +525,106 @@ function presenterKeyDown(event){
 
 //* TIMER *//
 
-var timerSetUp = false;
-var timerRunning = false;
-var intervalRunning = false;
-var seconds = 0;
-var totalMinutes = 35;
+var timerRunning   = false;
+var timerIntervals = [];
 
-function toggleTimer()
-{
-  if (!timerRunning) {
-    timerRunning = true
-    totalMinutes = parseInt($("#timerMinutes").attr('value'))
-    $("#minStart").hide()
-    $("#minStop").show()
-    $("#timerInfo").text(timerStatus(0));
-    seconds = 0
-    if (!intervalRunning) {
-      intervalRunning = true
-      setInterval(function() {
-        if (!timerRunning) { return; }
-        seconds++;
-        $("#timerInfo").text(timerStatus(seconds));
-      }, 1000);  // fire every minute
+function startTimer() {
+  timerRunning = true;
+
+  $("#timerLabel").hide();
+  $("#minStart").hide();
+
+  $('#stopTimer').val('Cancel');
+  $("#stopTimer").show();
+  $("#pauseTimer").show();
+  $("#timerDisplay").show();
+  $("#timerSection").addClass('open');
+
+  var time = parseInt( $("#timerMinutes").val() ) * 60;
+  if(time) {
+    $('#timerDisplay')
+        .attr('data-timer', time)
+        .TimeCircles({
+          direction:       'Counter-clockwise',
+          total_duration:  time,
+          count_past_zero: false,
+          time: {
+            Days:    { show: false },
+            Hours:   { show: false },
+            Seconds: { show: false },
+          }
+        }).addListener(timerProgress);
+
+    // add 60 seconds to each interval because the timer works on floor()
+    timerIntervals = [ time/2+60, time/4+60, time/8+60, time/16+60 ]
+  }
+}
+
+function timerProgress(unit, value, total){
+
+  if (timerIntervals.length > 0) {
+    if (total < timerIntervals[0]) {
+
+      ts = $('#timerSection');
+
+      // clear all classes except for the one sizing the container
+      ts.attr('class', 'open');
+
+      // remove all the intervals we've already passed
+      timerIntervals = timerIntervals.filter(function(val) { return val < total });
+
+      switch(timerIntervals.length) {
+        case 3:   ts.addClass('intervalHalf');      break;
+        case 2:   ts.addClass('intervalQuarter');   break;
+        case 1:   ts.addClass('intervalWarning');   break;
+        case 0:
+          ts.addClass('intervalCritical');
+          $("#timerDisplay").TimeCircles({circle_bg_color: "red"});
+
+          // when timing short durations, sometimes the last interval doesn't get triggered until we end.
+          if( $("#timerDisplay").TimeCircles().getTime() <= 0 ) {
+            endTimer();
+          }
+          break;
+      }
     }
-  } else {
-    seconds = 0
-    timerRunning = false
-    totalMinutes = 0
-    setProgressColor(false)
-    $("#timerInfo").text('')
-    $("#minStart").show()
-    $("#minStop").hide()
+  }
+  else {
+    endTimer();
   }
 }
 
-function timerStatus(seconds) {
-  var minutes = Math.round(seconds / 60);
-  var left = (totalMinutes - minutes);
-  var percent = Math.round((minutes / totalMinutes) * 100);
-  var progress = getSlidePercent() - percent;
-  setProgressColor(progress);
-  return minutes + '/' + left + ' - ' + percent + '%';
+function toggleTimer() {
+  if (!timerRunning) {
+    timerRunning = true;
+    $('#pauseTimer').val('Pause');
+    $('#timerDisplay').removeClass('paused');
+    $("#timerDisplay").TimeCircles().start();
+  }
+   else {
+    timerRunning = false;
+    $('#pauseTimer').val('Resume');
+    $('#timerDisplay').addClass('paused');
+    $("#timerDisplay").TimeCircles().stop();
+  }
 }
 
-function setProgressColor(progress) {
-  ts = $('#timerSection')
-  ts.removeClass('tBlue')
-  ts.removeClass('tGreen')
-  ts.removeClass('tYellow')
-  ts.removeClass('tRed')
+function endTimer() {
+  $('#stopTimer').val('Reset');
+  $("#pauseTimer").hide();
+}
 
-  if(progress === false) return;
+function stopTimer() {
+  $("#timerDisplay").removeData('timer');
+  $("#timerDisplay").TimeCircles().destroy();
 
-  if(progress > 10) {
-    ts.addClass('tBlue')
-  } else if (progress > 0) {
-    ts.addClass('tGreen')
-  } else if (progress > -10) {
-    ts.addClass('tYellow')
-  } else {
-    ts.addClass('tRed')
-  }
+  $("#timerLabel").show();
+  $("#minStart").show();
+
+  $("#stopTimer").hide();
+  $("#pauseTimer").hide();
+  $("#timerDisplay").hide();
+  $('#timerSection').removeClass();
 }
 
 /********************
@@ -546,12 +632,12 @@ function setProgressColor(progress) {
  ********************/
 function toggleFollower()
 {
-  mode.follow = $("#remoteToggle").attr("checked");
+  mode.follow = $("#remoteToggle").prop("checked");
   getPosition();
 }
 
 function toggleUpdater()
 {
-  mode.update = $("#followerToggle").attr("checked");
+  mode.update = $("#followerToggle").prop("checked");
   update();
 }

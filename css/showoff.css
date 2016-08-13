@@ -44,6 +44,11 @@ pre code {
   body {
     margin:0;
     padding:0;
+    overflow: hidden;
+  }
+
+  body#download {
+    overflow: auto;
   }
 
   #preso,
@@ -95,6 +100,9 @@ pre code {
       padding: 1em;
       z-index: 2147483647; /* max, see http://www.puidokas.com/max-z-index/ */
       text-align: center;
+  }
+  #buttonNav {
+    display: none;
   }
 
   /* prevent large images from getting too out of hand */
@@ -213,7 +221,7 @@ pre code {
     white-space: pre;
 }
 
-.notes, .handouts, .instructor, .solguide { display: none }
+#notes, .notes-section, .instructor, .solguide { display: none }
 
 .offscreen { position:absolute; top:0; left:-9999px; overflow:hidden; }
 
@@ -229,6 +237,7 @@ pre code {
 
 img#disconnected {
   float: right;
+  margin: 5px;
   display: none;
 }
 
@@ -298,35 +307,6 @@ img#disconnected {
       margin: 0.25em;
     }
 
-#presenterPopup {
-  display: none;
-  position: absolute;
-  z-index: 2147483647;
-  top: 24px;
-  left: 25%;
-  max-height: 80%;
-  width: 50%;
-  border-radius: 0 0 .5em .5em;
-  border-bottom: 8px solid #222222;
-  background-color: #222222;
-  overflow: auto;
-}
-
-  #presenterPopup h1,
-  #presenterPopup h3 {
-   color: #ffffff;
-  }
-
-  #presenterPopup a {
-    margin-left: 12px;
-    color: #ffffff;
-  }
-
-  #presenterPopup ul#downloads {
-    margin-left: 0;
-    list-style-type: none;
-  }
-
 /**********************************
  ***       Table styling        ***
  **********************************/
@@ -372,7 +352,8 @@ img#disconnected {
   float: left;
 }
 
-#hamburger:hover {
+#hamburger:hover,
+#hamburger.highlight {
   opacity: 1;
   background-color: #337ab7;
   color: #ffffff;
@@ -433,6 +414,18 @@ img#disconnected {
   cursor: pointer;
 }
 
+.buttonWrapper.disabled {
+  opacity: 0.25;
+  filter: grayscale(100%);
+  -webkit-filter: grayscale(100%);
+  background-color: initial !important;
+  color: initial !important;
+}
+.buttonWrapper.disabled:hover {
+  background-color: initial !important;
+  color: initial !important;
+}
+
 .buttonWrapper.split {
   float: left;
   width: 50%;
@@ -490,7 +483,48 @@ img#disconnected {
   padding: .5em 1.5em;
 }
 
+#askedQuestions {
+  margin: 0;
+}
+#askedQuestions li {
+  cursor: default;
+}
+#askedQuestions li:hover {
+  background-color: #dedede;
+}
+#askedQuestions li:hover:after {
+  font-family: FontAwesome;
+  font-style: normal;
+  font-weight: normal;
+  text-decoration: inherit;
+  padding: 0 8px;
+  float: right;
+  content: "\f057"; /* fa-times-circle */
+}
+#askedQuestions li.closed {
+  text-decoration: line-through;
+  color: #ccc;
+}
+
 /* End Sidebar styling */
+
+/* questions HUD indicator */
+#questionsIndicator {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 1em;
+  height: 1em;
+  font-size: 2em;
+  background-color: #fb8d8d;
+  border: 1px solid #900e0e;
+  border-radius: 5px;
+  padding: 0 0 0.25em 0.25em;
+  opacity: 0.5;
+  z-index: 999999999;
+  display: none;
+}
+/* end questions HUD indicator */
 
 .results {
   background-color:#002200;
@@ -509,34 +543,76 @@ img#disconnected {
   padding: 0;
 }
 
-/* Add a Shell "code highlighting" style to resemble the look of a terminal window. */
-.content pre.highlight code.language-shell {
+/* Add Console "code highlighting" styles to resemble the look of a terminal window. */
+pre.highlight code.language-console {
+  background: #222;
+  background: url(titlebar/left.png) left top no-repeat, url(titlebar/right.png) right top no-repeat, url(titlebar/center.png) center top repeat-x #222;
+  color: #63de00;
+  padding: 30px 0.5em 0.5em;
+  border: 1px solid #acacac;
+  border-radius: 6px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  box-shadow: 0px 0px 10px #acacac;
+  overflow: hidden;
+}
+
+pre.highlight code.language-powershellconsole {
+  background: rgb(1, 36, 86);
+  background: url(titlebar/powershell-controls.png) right top no-repeat, url(titlebar/powershell.png) left top repeat-x rgb(1, 36, 86);
+  color: rgb(238, 237, 240);
+  padding: 32px 0.5em 0.5em;
+  border: 6px solid rgb(102, 202, 234);
+  border-top: 2px solid rgb(102, 202, 234);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+pre.highlight code.language-console.nochrome,
+pre.highlight code.language-powershellconsole.nochrome {
+  background-image: none;
+  border-width: 1px;
+  padding: 0.5em;
+  border-radius: 4px;
+}
+
+/* to avoid breaking changes */
+.highlight .language-shell {
   display: block;
-  background-color: #111;
+  background-color: #222;
   color: #00ff40;
   border: 2px solid #ddd;
   padding: 0.5em;
   overflow: hidden;
 }
 
-/* executable code blocks */
-code.execute {
-  cursor: context-menu;
-  background-image: url(run_code.png);
-  background-position: right 5px top 5px;
-  background-repeat: no-repeat;
-  display: block;
-  min-height: 42px;
+
+
+/**********************************
+ ***       code execution       ***
+ **********************************/
+ .execute {
+  position: relative;
+  cursor: pointer;
 }
 
-code.executing {
-  opacity: 0.5;
-  background-image: url(run_code-dim.png);
+.execute:after {
+  font-family: FontAwesome;
+  content: "\F144";
+  position: absolute;
+  right: .5em;
 }
 
-code.executing:hover {
-  cursor: wait;
+.executing:after {
+  content: "\f1ce";
+  color: #e74c3c;
+  -webkit-animation: spin 1.5s linear infinite;
+  animation: spin 1.5s linear infinite;
 }
+
+.executing:hover { cursor: wait; }
+/* End code execution */
+
 
 #tips, #preshow_timer {
   display:inline;
@@ -627,32 +703,36 @@ form .element {
 .rendered {
   border: 1px solid #ccc;
   border-radius: 0.5em;
-  margin: 1em;
-  padding: 0.25em 0.25em 0.25em .5em;
+  padding: .5em;
   min-height: 3em;
 }
 
 .rendered label {
   border-bottom: 1px solid #999;
 }
-.rendered .item {
+.item {
+  width: 100%;
+  position: relative;
+}
+
+.answer {
+  position: absolute;
+  left: 0;
+}
+.bar {
   height: 1.25em;
-  white-space: nowrap;
-  background-color: #f2dede;
+  background-color: #e74c3c;
   border: 1px solid #f45f5f;
   border-left: none;
   border-radius: 0 0.4em 0.4em 0;
 }
-.rendered .item.correct {
+.correct .bar {
   background-color: #dff0d8;
   border: 1px solid #00AA00;
   border-left: none;
 }
-.count {
-  display: none;
-}
 
-#notes .form.wrapper {
+.count {
   display: none;
 }
 
@@ -678,12 +758,13 @@ form .element {
 .supplemental ul { list-style: disc; margin-left: 1.25em !important; padding-left: inherit !important; }
 
 /* downloads page */
-body#download ul#downloads {
-    margin-left:  20%;
-    list-style-type: disc;
+#download {
+  max-width: 90%;
+  margin: 0 auto;
 }
-body#download ul#downloads li {
-    margin: 0.5em;
+
+#download h4 {
+  margin-left: .5em;
 }
 
 /**********************
@@ -696,6 +777,7 @@ body#download ul#downloads li {
   margin: 0.25em 1em;
   padding: 0.1em;
   background-color: #dfdfdf;
+  color: #222;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
   -khtml-border-radius: 5px;
@@ -777,37 +859,46 @@ body#download ul#downloads li {
  ***    Callouts    ***
  **********************/
 
- .callout {
-   padding: 12px 0;
-   min-height: 2em;
-   border: 1px solid #222;
-   border-radius: 4px;
-   background-color: transparent; /* because there's a warning class with a red background */
- }
+.callout {
+  padding: 1em;
+  line-height: 1.2em;
+  border: 1px solid #222;
+  border-radius: 4px;
+  background-color: transparent; /* because there's a warning class with a red background */
+}
 
- .callout:before {
-   font-family: FontAwesome;
-   font-style: normal;
-   font-weight: normal;
-   font-size: 2em;
-   text-decoration: inherit;
-   padding: 0 8px;
-   float: left;
- }
+  .callout:before {
+    font-family: FontAwesome;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 2em;
+    text-decoration: inherit;
+    position: absolute;
+    left: 1em;
+  }
 
- .callout.info:before     { content: "\f05a"; } /* fa-info-circle */
- .callout.warning:before  { content: "\f071"; } /* fa-exclamation-triangle */
- .callout.question:before { content: "\f059"; } /* fa-question-circle */
- .callout.exercise:before { content: "\f41b"; } /* fa-pencil-square */
- .callout.stop:before     { content: "\f05e"; } /* fa-ban */
+  .callout.info,
+  .callout.warning,
+  .callout.question,
+  .callout.exercise,
+  .callout.stop,
+  .callout.thumbsup {
+    padding-left: 3em;
+  }
 
- /**********************
- ***  end callouts   ***
- **********************/
+  .callout.info:before     { content: "\f05a"; } /* fa-info-circle */
+  .callout.warning:before  { content: "\f071"; } /* fa-exclamation-triangle */
+  .callout.question:before { content: "\f059"; } /* fa-question-circle */
+  .callout.exercise:before { content: "\f41b"; } /* fa-pencil-square */
+  .callout.stop:before     { content: "\f05e"; } /* fa-ban */
+  .callout.thumbsup:before { content: "\f164"; } /* fa-thumbs-up */
+
+/**********************
+***  end callouts   ***
+**********************/
 
 
-/* iPhone */
-/* Portrait */
+/* Tiny mobile devices. Larger devices scale automatically. */
 @media screen and (max-width: 320px)
 {
   html,body,#footer {
@@ -826,7 +917,40 @@ body#download ul#downloads li {
     margin: 0;
     padding: 0;
   }
+}
+/* show notes, etc. when in portrait mode with plenty of room for it. */
+@media screen and (max-width: 1024px) and (orientation:portrait) {
+  body { overflow: auto; }
 
+  /* Styling to make the handout notes appear in the printed output. */
+  #notes {
+    display: block;
+    clear: both;
+    margin: 1em 1em 4em 1em;
+    font-size: 9pt;
+    border-top: 2px dashed #999;
+  }
+}
+
+/* Show button navigation on touch screen devices. */
+@media screen and (pointer: coarse) {
+  #buttonNav {
+    display: block;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+  }
+
+  #buttonNav div {
+    display: inline-block;
+    width: 50%;
+    line-height: 3em;
+    background-color: #337ab7;
+    color: #fff;
+    font-weight: bold;
+    text-align: center;
+    vertical-align: middle;
+  }
 }
 
 /** Print **/
@@ -867,19 +991,32 @@ body#download ul#downloads li {
   }
 
   /* Styling to make the handout notes appear in the printed output. */
-  .handouts {
+  .notes-section {
     display: block;
     clear: both;
-    padding-top: 1em;
+    margin-top: 1em;
+    border-top: 2px dashed #999;
   }
 
-  /* prepend the first element of the .handouts div with Notes: */
-  .handouts > :first-child:before {
-    display: block;
-    font-weight: bold;
-    content: "Notes:";
-    border-top: 2px dashed #999;
-    padding: 0.25em 0 0.5em 0;
+  .notes-section .callout {
+    margin-right: 1em;
+    margin-left: 1em;
+  }
+
+  .notes-section.notes .personal {
+    float: right;
+    border-left: 2px solid #999;
+    border-bottom: 2px solid #999;
+    border-radius: 0 0 0 0.5em;
+    padding: 0.1em 0 0.25em 0.25em;
+    margin: 0 0 1em 1em;
+    max-width: 35%;
+  }
+
+  .notes-section.notes .personal h1 {
+    margin-top: 0;
+    border-bottom: 1px solid #ccc;
+    font-size: 1.5em;
   }
 
   /* page break styling */
@@ -892,3 +1029,30 @@ body#download ul#downloads li {
   }
 
 }
+
+ /***********************
+ ***    Animations    ***
+ ***********************/
+
+@-webkit-keyframes spin {
+    from   {
+        -webkit-transform: rotate(0deg);  /* Chrome, Opera 15+, Safari 3.1+ */
+        transform: rotate(0deg);  /* Firefox 16+, IE 10+, Opera */
+    }
+    to {
+        -webkit-transform: rotate(360deg);  /* Chrome, Opera 15+, Safari 3.1+ */
+        transform: rotate(360deg);  /* Firefox 16+, IE 10+, Opera */
+    }
+}
+@keyframes spin {
+    from   {
+        -webkit-transform: rotate(0deg);  /* Chrome, Opera 15+, Safari 3.1+ */
+        transform: rotate(0deg);  /* Firefox 16+, IE 10+, Opera */
+    }
+    to {
+        -webkit-transform: rotate(360deg);  /* Chrome, Opera 15+, Safari 3.1+ */
+        transform: rotate(360deg);  /* Firefox 16+, IE 10+, Opera */
+    }
+}
+
+/* end animations */

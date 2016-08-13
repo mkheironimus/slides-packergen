@@ -17,30 +17,46 @@
 }
 
 #topbar {
+  display: flex;
+  flex-flow: row;
   line-height: 24px;
+  height: 24px;
   background: #222222;
   font-size: .55em;
   color: #fff;
-  padding: 0 1em;
 }
 
   #topbar a {
     text-decoration: none;
     color: #fff;
-    padding: .35em;
   }
 
   #topbar a:hover{
     background-color: #555;
   }
 
+  #topbar .fa {
+    color: #8affeb;
+  }
+
+  #slideSource {
+    display: flex;
+    flex-shrink: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    margin: 0 0.5em;
+  }
+
   #links {
-    float: right;
+    display: flex;
+    flex-shrink: 0;
+    margin: 0 0 0 auto;
   }
 
   #links a {
     border: 1px solid #ccc;
     border-radius: 0.5em;
+    padding: .35em;
   }
 
   #links a.enabled {
@@ -52,12 +68,28 @@
   }
 
   .desktop span {
-    margin: 0 1em;
+    margin: 0 0.5em;
   }
 
 #presenterPopup {
-  font-size: 0.5em;
+  display: none;
+  position: absolute;
+  z-index: 2147483647;
+  top: 24px;
+  left: 25%;
+  max-height: 80%;
+  width: 50%;
+  border-radius: 0 0 .5em .5em;
+  border-bottom: 8px solid #222222;
+  background-color: #222222;
+  color: #ffffff;
+  font-size: .8em;
+  overflow: auto;
 }
+
+  #presenterPopup a {
+    color: #ffffff;
+  }
 
 #center {
   display: -webkit-flex;
@@ -86,25 +118,58 @@
   }
     #timerSection {
       margin-bottom: 0.25em;
-      padding-left: 0.5em;
       height: 2.15em;
       min-height: 2.15em;
       line-height: 2.15em;
       vertical-align: middle;
     }
+    #timerSection.open {
+      height: 100px;
+      min-height: 100px;
+    }
 
-    #timerInfo {
-      margin-left: 25px;
+    #timerDisplay {
+      height: 100px;
+      width: 100px;
+    }
+
+    #timerDisplay.paused {
+      -webkit-filter: grayscale(100%);
+      filter: grayscale(100%);
+      opacity: 0.25;
     }
 
     #timerSection input[type='button'] {
-      float: right;
+      margin: 2px 0px;
     }
 
-    .tBlue   { background: #79d; }
-    .tGreen  { background: #9d9; }
-    .tRed    { background: #d99; }
-    .tYellow { background: #dd9; }
+    #timerSection #pauseTimer {
+      float: left;
+      display: none;
+    }
+    #timerSection #stopTimer {
+      float: right;
+      display: none;
+    }
+    #timerSection #timerDisplay {
+      display: none;
+      margin: 0 auto;
+    }
+
+    .intervalHalf,
+    .intervalQuarter,
+    .intervalWarning,
+    .intervalCritical {
+      -webkit-transition: background-color 1000ms linear;
+      -moz-transition:    background-color 1000ms linear;
+      -o-transition:      background-color 1000ms linear;
+      -ms-transition:     background-color 1000ms linear;
+      transition:         background-color 1000ms linear;
+    }
+    .intervalHalf     { background: #99ff99; }
+    .intervalQuarter  { background: #ffff66; }
+    .intervalWarning  { background: #ffcc66; }
+    .intervalCritical { background: #ffcccc; }
 
     #feedbackPace {
       height: 40px;
@@ -137,7 +202,8 @@
 
     .submenu {
       display: block;
-      overflow: auto;
+      overflow-x: hidden;
+      overflow-y: auto;
     }
 
   #presenter {
@@ -218,7 +284,7 @@
   display:         flex;
   -webkit-flex-flow: row;
           flex-flow: row;
-  height: 150px;
+  height: 180px;
   background: #F5ED9B;
   border-top: 1px solid #ccc;
 }
@@ -234,17 +300,26 @@
     height: 100%;
   }
 
-  #questions ul {
-    margin-left: 1.5em;
-    margin-right: 0.25em;
+  #questions #answered li {
+    text-decoration: line-through;
+    color: #ccc;
   }
 
-  #questions li:hover {
-    background: #dedede url(close.png) no-repeat top right;
-    -moz-border-radius: 0.25em;
-    -webkit-border-radius: 0.25em;
-    -khtml-border-radius: 0.25em;
-    border-radius: 0.25em;
+  #questions #unanswered li:hover {
+    background-color: #dedede;
+  }
+  #questions #unanswered li:hover:after {
+    font-family: FontAwesome;
+    font-style: normal;
+    font-weight: normal;
+    text-decoration: inherit;
+    padding: 0 8px;
+    float: right;
+    content: "\f058"; /* fa-check-circle */
+  }
+
+  #questions li {
+    cursor: default;
   }
 
   #notes {
@@ -254,32 +329,42 @@
             order: 1;
     overflow: auto;
     height: 100%;
+    padding: 0 1em;
+    display: block;
+    position: relative;
   }
-  #notes p,
-  #notes h1,
-  #notes h2,
-  #notes h3,
-  #notes h4,
-  #notes ol,
-  #notes ul {
-    margin-right: 0.75em;
-    padding-left: 0.25em;
+
+  #notes ul.section-selector {
+    padding: 0;
+    margin: 0 0 0 -1.25em;         /* compensate for the border on #notes. 1/0.8 em */
+    text-align: center;
+    border-bottom: 1px solid #ccc;
+    font-size: 0.8em;
+    position: absolute;
+    background-color: #F5ED9B;
   }
-  #notes p {
-    padding: 0.25em;
-    margin-bottom: 0.5em;
+  #notes ul.section-selector li {
+    display: none;
+    padding: 0 1em;
   }
-  #notes ol, #notes ul {
-    padding-left: 2em;
-    padding-top: 0.25em;
-    margin-bottom: 0.5em;
+  #notes ul.section-selector li:hover {
+    background-color: #b9b9b9;
+    transition-duration: 0.5s;
   }
-  #notes ol {
-    list-style-type: decimal;
+  #notes ul.section-selector li.selected {
+    display: inline;
+    background-color: #ccc;
   }
-  #notes ul {
-    list-style-type: disc;
+  #notes ul.section-selector:hover li {
+    display: inline;
   }
+
+  #notes ul.section-selector li a {
+    text-decoration: none;
+  }
+
+  #notes ol { list-style-type: decimal; }
+  #notes ul { list-style-type: disc; }
 
   #notes .element {
     display: inline-block;
@@ -288,9 +373,8 @@
 
   #notes .count {
     display: inline-block;
-    background-color: #27ae60;
+    background-color: #2e2e2e;
     color: #ffffff;
-    padding: 0 8px;
     font-size: 2.5em;
     vertical-align: top;
     border-radius: .2em;
@@ -302,7 +386,7 @@
     border-bottom: 4px solid #999;
     border-radius: 0 0 0 0.5em;
     padding: 0.1em 0 0.25em 0.25em;
-    margin: 0 0 1em 1em;
+    margin: 0 -1em 1em 1em;                  /* compensate for the padding in the #notes section */
     background: #eee;
     max-width: 25%;
   }
@@ -312,6 +396,11 @@
     border-bottom: 1px solid #ccc;
     font-size: 1.5em;
   }
+
+  #notes .pagebreak {
+    display: none;
+  }
+
 
 a.controls {
   text-decoration: none;
@@ -323,6 +412,25 @@ a.controls {
   -khtml-border-radius: 0.5em;
   border-radius: 0.5em;
 }
+
+/* hide some elements when the screen is too small */
+@media screen and (max-width: 1000px)
+{
+  #slideSource label {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 900px)
+{
+  #topbar .fa {
+    display: none;
+  }
+  .desktop a {
+    margin-right: 0.25em;
+  }
+}
+
 
 /* iPhone */
 /* Portrait */
@@ -436,5 +544,11 @@ a.controls {
     width: 100%;
     margin: 0;
     padding: 0;
+  }
+}
+@media screen and (pointer: coarse)
+{
+  #buttonNav {
+    position: initial;
   }
 }

@@ -16,14 +16,12 @@ var incrCode = false
 var debugMode = false
 var gotoSlidenum = 0
 var lastMessageGuid = 0
-var query
+var query;
+var section = 'handouts'; // default to showing handout notes for display view
 var slideStartTime = new Date().getTime()
 
 var loadSlidesBool
 var loadSlidesPrefix
-
-var keycode_dictionary,
-    keycode_shifted_keys;
 
 var mode = { track: true, follow: true };
 
@@ -45,7 +43,6 @@ function setupPreso(load_slides, prefix) {
 	loadSlidesPrefix = prefix || '/'
 	loadSlides(loadSlidesBool, loadSlidesPrefix)
 
-  loadKeyDictionaries();
   setupSideMenu();
 
 	doDebugStuff()
@@ -54,9 +51,12 @@ function setupPreso(load_slides, prefix) {
 	toggleKeybinding('on');
 
 	$('#preso').addSwipeEvents().
-		bind('tap', swipeLeft).         // next
+//		bind('tap', swipeLeft).         // next
 		bind('swipeleft', swipeLeft).   // next
 		bind('swiperight', swipeRight); // prev
+
+  $('#buttonNav #buttonPrev').click(prevStep);
+  $('#buttonNav #buttonNext').click(nextStep);
 
   // give us the ability to disable tracking via url parameter
   if(query.track == 'false') mode.track = false;
@@ -82,25 +82,21 @@ function loadSlides(load_slides, prefix, reload) {
   if (reload) {
     url += "?cache=clear";
   }
-	//load slides offscreen, wait for images and then initialize
-	if (load_slides) {
-		$("#slides").load(url, false, function(){
-			$("#slides img").batchImageLoad({
-			loadingCompleteCallback: initializePresentation(prefix)
-		})
-		})
-	} else {
-	$("#slides img").batchImageLoad({
-		loadingCompleteCallback: initializePresentation(prefix)
-	})
-	}
-}
-
-function loadKeyDictionaries () {
-  $.getJSON('js/keyDictionary.json', function(data) {
-    keycode_dictionary = data['keycodeDictionary'];
-    keycode_shifted_keys = data['shiftedKeyDictionary'];
-  });
+  //load slides offscreen, wait for images and then initialize
+  if (load_slides) {
+    $("#slides").load(url, false, function(){
+      $("#slides img").batchImageLoad({
+        loadingCompleteCallback: initializePresentation(prefix)
+      });
+      if (reload) {
+        location.reload(true);
+      }
+    })
+  } else {
+    $("#slides img").batchImageLoad({
+      loadingCompleteCallback: initializePresentation(prefix)
+    })
+  }
 }
 
 function initializePresentation(prefix) {
@@ -196,11 +192,11 @@ function setupSideMenu() {
   $("#hamburger").click(function() {
     $('#feedbackSidebar, #sidebarExit').toggle();
     toggleKeybinding();
-
   });
 
   $("#navToggle").click(function() {
-      $("#navigation").toggle();
+    $("#navigation").toggle();
+    updateMenuChevrons();
   });
 
   $('#fileDownloads').click(function() {
@@ -217,19 +213,38 @@ function setupSideMenu() {
   });
 
   $('#questionToggle').click(function() {
-    $('#questionSubmenu').toggle();
+    if ( ! $(this).hasClass('disabled') ) {
+      $('#questionSubmenu').toggle();
+    }
   });
   $("#askQuestion").click(function() {
-    askQuestion( $("#question").val());
-    feedback_response(this, "Sending...");
+    if ( ! $(this).hasClass('disabled') ) {
+      var question = $("#question").val()
+      var qid = askQuestion(question);
+
+      feedback_response(this, "Sending...");
+      $("#question").val('');
+
+      var questionItem = $('<li/>').text(question).attr('id', qid);
+      questionItem.click( function(e) {
+        cancelQuestion($(this).attr('id'));
+        $(this).remove();
+      });
+      $("#askedQuestions").append(questionItem);
+    }
   });
 
   $('#feedbackToggle').click(function() {
-    $('#feedbackSubmenu').toggle();
+    if ( ! $(this).hasClass('disabled') ) {
+      $('#feedbackSubmenu').toggle();
+    }
   });
   $("#sendFeedback").click(function() {
-    sendFeedback($( "input:radio[name=rating]:checked" ).val(), $("#feedback").val());
-    feedback_response(this, "Sending...");
+    if ( ! $(this).hasClass('disabled') ) {
+      sendFeedback($( "input:radio[name=rating]:checked" ).val(), $("#feedback").val());
+      feedback_response(this, "Sending...");
+      $("#feedback").val('');
+    }
   });
 
   $("#editSlide").click(function() {
@@ -257,6 +272,28 @@ function setupSideMenu() {
   }
 }
 
+function updateQuestionIndicator(count) {
+  if(count == 0) {
+    $('#questionsIndicator').hide();
+  }
+  else {
+    $('#questionsIndicator').show();
+    $('#questionsIndicator').text(count);
+  }
+}
+
+function updateMenuChevrons() {
+  $(".navSection + ul:not(:visible)")
+      .siblings('a')
+      .children('i')
+      .attr('class', 'fa fa-angle-down');
+
+  $(".navSection + ul:visible")
+      .siblings('a')
+      .children('i')
+      .attr('class', 'fa fa-angle-up');
+}
+
 function setupMenu() {
   var nav = $("<ul>"),
       currentSection = '',
@@ -270,6 +307,7 @@ function setupMenu() {
       .shift();
     var headers = $(slide).children("h1, h2");
     var slideTitle = '';
+    var content;
 
     if (currentSection !== slidePath) {
       currentSection = slidePath;
@@ -283,6 +321,12 @@ function setupMenu() {
         .append(icon)
         .click(function() {
           $(this).next().toggle();
+          updateMenuChevrons();
+
+          if( $(this).parent().is(':last-child') ) {
+            $(this).next().children('li').first()[0].scrollIntoView();
+          }
+
           return false;
         });
       sectionUL = $("<ul>");
@@ -290,13 +334,18 @@ function setupMenu() {
       nav.append(newSection);
     }
 
+    // look for first header to use as a title
     if (headers.length > 0) {
       slideTitle = headers.first().text();
     } else {
-      slideTitle = $(slide)
-        .find(".content")
-        .text()
-        .substr(0, 20);
+      // if no header, look at content
+      content    = $(slide).find(".content");
+      slideTitle = content.text().substr(0, 20).trim();
+
+      // if no content (like photo only) fall back to slide name
+      if (slideTitle == "") {
+        slideTitle = content.attr('ref').split('/').pop();
+      }
     }
 
     var navLink = $("<a>")
@@ -460,6 +509,11 @@ function showSlide(back_step, updatepv) {
   $(active).parent().addClass('highlighted');
   $(active).parent().parent().show();
 
+  updateMenuChevrons();
+
+  // copy notes to the notes field for mobile.
+  postSlide();
+
   return ret;
 }
 
@@ -468,9 +522,22 @@ function getSlideProgress()
 	return (slidenum + 1) + '/' + slideTotal
 }
 
+function getCurrentSections()
+{
+  return currentSlide.find("div.notes-section").map(function() {
+    return $(this).attr('class').split(' ').filter(function(x) { return x != 'notes-section'; });
+  });
+}
+
+function setCurrentSection(newSection)
+{
+  section = newSection;
+  postSlide();
+}
+
 function getCurrentNotes()
 {
-    var notes = currentSlide.find("div.notes");
+    var notes = currentSlide.find("div.notes-section."+section);
     return notes;
 }
 
@@ -583,50 +650,52 @@ function renderForm(form) {
   var action = form.attr("action");
   $.getJSON(action, function( data ) {
     //console.log(data);
-    form.children('.element').each(function() {
-      var key = $(this).attr('data-name');
+    form.children('.element').each(function(index, element) {
+      var key = $(element).attr('data-name');
 
       // add a counter label if we haven't already
-      if( $(this).next('.count').length === 0 ) {
-        $(this).after($('<h1>').addClass('count'));
+      if( $(element).next('.count').length === 0 ) {
+        $(element).after($('<h1>').addClass('count'));
       }
 
-      $(this).find('ul > li > *').each(function() {
+      $(element).find('ul > li > *').each(function() {
         $(this).parent().parent().before(this);
       });
-      $(this).children('ul').each(function() {
+      $(element).children('ul').each(function() {
         $(this).remove();
       });
 
-      // replace all input widgets with spans for the bar chart
-      $(this).children(':input').each(function() {
-        switch( $(this).attr('type') ) {
+      // replace all input widgets with divs for the bar chart
+      $(element).children(':input').each(function(index, input) {
+        switch( $(input).attr('type') ) {
           case 'text':
           case 'button':
           case 'submit':
           case 'textarea':
             // we don't render these
-            $(this).parent().remove();
+            $(input).parent().remove();
             break;
 
           case 'radio':
           case 'checkbox':
             // Just render these directly and migrate the label to inside the span
-            var label   = $(this).next('label');
+            var label   = $(input).next('label');
             var text    = label.text();
-            var classes = $(this).attr('class');
+            var classes = $(input).attr('class');
 
             if(text.match(/^-+$/)) {
-              $(this).remove();
+              $(input).remove();
             } else {
               var resultDiv = $('<div>')
                 .addClass('item')
-                .attr('data-value', $(this).attr('value'))
-                .text(text);
+                .attr('data-value', $(input).attr('value'))
+                .append($('<span>').addClass('answer').text(text))
+                .append($('<div>').addClass('bar'));
+
               if (classes) {
                 resultDiv.addClass(classes);
               }
-              $(this).replaceWith(resultDiv);
+              $(input).replaceWith(resultDiv);
             }
             label.remove();
             break;
@@ -634,24 +703,25 @@ function renderForm(form) {
           default:
             // select doesn't have a type attribute... yay html
             // poke inside to get options, then render each as a span and replace the select
-            var parent = $(this).parent();
+            var parent = $(input).parent();
 
-            $(this).children('option').each(function() {
-              var text    = $(this).text();
-              var classes = $(this).attr('class');
+            $(input).children('option').each(function(index, option) {
+              var text    = $(option).text();
+              var classes = $(option).attr('class');
 
               if(! text.match(/^-+$/)) {
                 var resultDiv = $('<div>')
                   .addClass('item')
-                  .attr('data-value', $(this).val())
-                  .text(text);
+                  .attr('data-value', $(option).val())
+                  .append($('<span>').addClass('answer').text(text))
+                  .append($('<div>').addClass('bar'));
                 if (classes) {
                   resultDiv.addClass(classes);
                 }
                 parent.append(resultDiv);
               }
             });
-            $(this).remove();
+            $(input).remove();
             break;
         }
       });
@@ -661,8 +731,8 @@ function renderForm(form) {
         // number of unique responses
         var total = 0;
         // double loop so we can handle re-renderings of the form
-        $(this).find('.item').each(function() {
-          var name = $(this).attr('data-value');
+        $(element).find('.item').each(function(index, item) {
+          var name = $(item).attr('data-value');
 
           if(key in data) {
             var count = data[key]['responses'][name];
@@ -672,12 +742,12 @@ function renderForm(form) {
         });
 
         // insert the total into the counter label
-        $(this).next('.count').each(function() {
-          $(this).text(total);
+        $(element).next('.count').each(function(index, icount) {
+          $(icount).text(total);
         });
 
-        var oldTotal = $(this).attr('data-total');
-        $(this).find('.item').each(function() {
+        var oldTotal = $(element).attr('data-total');
+        $(element).find('.item').each(function() {
           var name     = $(this).attr('data-value');
           var oldCount = $(this).attr('data-count');
 
@@ -689,29 +759,35 @@ function renderForm(form) {
           }
 
           if(count != oldCount || total != oldTotal) {
-            var percent = (total) ? ((count/total)*100)+'%' : '0%';
+            var percent = (total) ? ((count/total)*100) + '%' : '0%';
 
             $(this).attr('data-count', count);
-            $(this).animate({width: percent});
+            $(this).find('.bar').animate({width: percent});
           }
         });
 
         // record the old total value so we only animate when it changes
-        $(this).attr('data-total', total);
+        $(element).attr('data-total', total);
       }
 
-      $(this).addClass('rendered');
+      $(element).addClass('rendered');
     });
 
   });
 }
 
 function connectControlChannel() {
-  protocol     = (location.protocol === 'https:') ? 'wss://' : 'ws://';
-  ws           = new WebSocket(protocol + location.host + '/control');
-  ws.onopen    = function()  { connected();          };
-  ws.onclose   = function()  { disconnected();       }
-  ws.onmessage = function(m) { parseMessage(m.data); };
+  if (interactive) {
+    protocol     = (location.protocol === 'https:') ? 'wss://' : 'ws://';
+    ws           = new WebSocket(protocol + location.host + '/control');
+    ws.onopen    = function()  { connected();          };
+    ws.onclose   = function()  { disconnected();       }
+    ws.onmessage = function(m) { parseMessage(m.data); };
+  }
+  else {
+    ws = {}
+    ws.send = function() { /* no-op */ }
+  }
 }
 
 // This exists as an intermediary simply so the presenter view can override it
@@ -721,12 +797,11 @@ function reconnectControlChannel() {
 
 function connected() {
   console.log('Control socket opened');
-  $("#feedbackSidebar button").attr("disabled", false);
+  $("#feedbackSidebar .interactive").removeClass("disabled");
   $("img#disconnected").hide();
 
   try {
-    // If we are a presenter, then remind the server where we are
-    update();
+    // If we are a presenter, then remind the server who we are
     register();
   }
   catch (e) {}
@@ -734,10 +809,22 @@ function connected() {
 
 function disconnected() {
   console.log('Control socket closed');
-  $("#feedbackSidebar button").attr("disabled", true);
+  $("#feedbackSidebar .interactive").addClass("disabled");
   $("img#disconnected").show();
 
   setTimeout(function() { reconnectControlChannel() } , 5000);
+}
+
+function generateGuid() {
+  var result, i, j;
+  result = 'S';
+  for(j=0; j<32; j++) {
+    if( j == 8 || j == 12|| j == 16|| j == 20)
+      result = result + '-';
+    i = Math.floor(Math.random()*16).toString(16).toUpperCase();
+    result = result + i;
+  }
+  return result;
 }
 
 function parseMessage(data) {
@@ -753,42 +840,78 @@ function parseMessage(data) {
     }
   }
 
-  if ("current" in command) { follow(command["current"]); }
-
-  // Presenter messages only, so catch errors if method doesn't exist
   try {
-    if ("pace"     in command) { paceFeedback(command["pace"]);     }
-    if ("question" in command) {  askQuestion(command["question"]); }
+    switch (command['message']) {
+      case 'current':
+        follow(command["current"]);
+        break;
+
+      case 'complete':
+        completeQuestion(command["questionID"]);
+        break;
+
+      case 'pace':
+        paceFeedback(command["pace"]);
+        break;
+
+      case 'question':
+        postQuestion(command["question"], command["questionID"]);
+        break;
+
+      case 'cancel':
+        removeQuestion(command["questionID"]);
+        break;
+    }
   }
   catch(e) {
     console.log("Not a presenter!");
   }
+
 }
 
 function sendPace(pace) {
-  ws.send(JSON.stringify({ message: 'pace', pace: pace}));
-  feedbackActivity();
+  if (ws.readyState == WebSocket.OPEN) {
+    ws.send(JSON.stringify({ message: 'pace', pace: pace}));
+  }
 }
 
 function askQuestion(question) {
-  ws.send(JSON.stringify({ message: 'question', question: question}));
-  feedbackActivity();
+  if (ws.readyState == WebSocket.OPEN) {
+    var questionID = generateGuid();
+    ws.send(JSON.stringify({ message: 'question', question: question, questionID: questionID}));
+    return questionID;
+  }
+}
+
+function cancelQuestion(questionID) {
+  if (ws.readyState == WebSocket.OPEN) {
+    ws.send(JSON.stringify({ message: 'cancel', questionID: questionID}));
+  }
+}
+
+function completeQuestion(questionID) {
+  var question = $("li#"+questionID)
+  if(question.length > 0) {
+    question.addClass('closed');
+    feedbackActivity();
+  }
 }
 
 function sendFeedback(rating, feedback) {
-  var slide  = $("#slideFilename").text();
-  ws.send(JSON.stringify({ message: 'feedback', rating: rating, feedback: feedback, slide: slide}));
-  $("input:radio[name=rating]:checked").attr('checked', false);
-  feedbackActivity();
+  if (ws.readyState == WebSocket.OPEN) {
+    var slide  = $("#slideFilename").text();
+    ws.send(JSON.stringify({ message: 'feedback', rating: rating, feedback: feedback, slide: slide}));
+    $("input:radio[name=rating]:checked").attr('checked', false);
+  }
 }
 
 function feedbackActivity() {
-  $("img#feedbackActivity").show();
-  setTimeout(function() { $("img#feedbackActivity").hide() }, 1000);
+  $('#hamburger').addClass('highlight');
+  setTimeout(function() { $("#hamburger").removeClass('highlight') }, 75);
 }
 
 function track() {
-  if (mode.track) {
+  if (mode.track && ws.readyState == WebSocket.OPEN) {
     var slideName    = $("#slideFilename").text();
     var slideEndTime = new Date().getTime();
     var elapsedTime  = slideEndTime - slideStartTime;
@@ -858,6 +981,23 @@ function nextStep(updatepv)
 		incrCurr++;
 	}
 }
+
+// carrying on our grand tradition of overwriting functions of the same name with presenter.js
+function postSlide() {
+	if(currentSlide) {
+    var notes = getCurrentNotes();
+    // Replace notes with empty string if there are no notes
+    // Otherwise it fails silently and does not remove old notes
+    if (notes.length === 0) {
+      notes = "";
+    } else {
+      notes = notes.html();
+    }
+
+		$('#notes').html(notes);
+	}
+}
+
 
 function doDebugStuff()
 {
@@ -1011,6 +1151,7 @@ function toggleDebug () {
 
 function reloadSlides () {
   if (confirm('Are you sure you want to reload the slides?')) {
+    $('html,body').css('cursor','progress');
     loadSlides(loadSlidesBool, loadSlidesPrefix, true);
     showSlide();
   }
@@ -1025,7 +1166,9 @@ function toggleHelp () {
 }
 
 function toggleContents () {
-  $('#navmenu').toggle().trigger('click');
+  $('#feedbackSidebar, #sidebarExit').toggle();
+  $("#navigation").toggle();
+  updateMenuChevrons();
 }
 
 function swipeLeft() {
@@ -1045,7 +1188,7 @@ var removeResults = function() {
 
 var print = function(text) {
 	removeResults();
-	var _results = $('<div>').addClass('results').html('<pre>'+$.print(text, {max_string:500})+'</pre>');
+	var _results = $('<div>').addClass('results').html('<pre>'+$.print(text, {max_string:1500})+'</pre>');
 	$('body').append(_results);
 	_results.click(removeResults);
 
