@@ -20,6 +20,11 @@ pre {
   padding: .25em;
 }
 
+/* when code blocks are embedded in a table, we don't need giant whitespace */
+table pre {
+  margin: 0;
+}
+
 /* applies to inline code only */
 code {
   padding: 2px 4px;
@@ -110,6 +115,16 @@ pre code {
     max-width: 100%;
     max-height: 100%;
   }
+
+  /* set up annotation overlays */
+  .slide canvas.annotations {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
 }
 
 /* plain (non-bullet) text */
@@ -167,6 +182,18 @@ pre code {
     font-size: 70%;
 }
 
+/* inverse slide style */
+.slide.inverse {
+  color: #efefef;
+  background-color: #262626;
+}
+  .slide.inverse code {
+    color: black;
+  }
+  .slide.inverse h1:first-child {
+    border-bottom: 3px solid #efefef;
+  }
+
 /**********************************
  ***       List styling         ***
  **********************************/
@@ -183,7 +210,7 @@ pre code {
 }
 
 /* ironically, normal lists have bullets and 'bullets' lists don't */
-.bullets > ul {
+.bullets ul {
   list-style: none;
   padding-left: 0px;
 }
@@ -480,6 +507,9 @@ img#disconnected {
 }
 
 .navItem {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   padding: .5em 1.5em;
 }
 
