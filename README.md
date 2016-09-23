@@ -1,7 +1,7 @@
 # slides-packergen
 
 Slide deck describing [packergen](https://github.com/mkheironimus/packergen).
-This is a [Showoff](https://github.com/puppetlabs/showoff) 0.13 presentation.
+This is a [Showoff](https://github.com/puppetlabs/showoff) 0.14 presentation.
 
 You can also view this presentation [in your
 browser](https://mkheironimus.github.io/slides-packergen/). Move through the
