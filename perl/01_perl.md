@@ -3,7 +3,6 @@
 * Minimal testing, but It Works For Me (TM)
 * No error handling
     * Perl will tell you if files can't be read or written
-    * YAMLish will complain if the input is not valid YAML
     * Packer will tell you if the JSON output is wrong
 
 ~~~SECTION:notes~~~
