@@ -6,11 +6,11 @@
   "email": "heironimus@gmail.com",
   "twitter": "mkheironimus",
   "templates": { "default": "default.tpl" },
-  "sections": [
-    { "section": "intro" },
-    { "section": "packer" },
-    { "section": "yaml" },
-    { "section": "perl" },
-    { "section": "closing" }
-  ]
+  "sections": {
+    "Intro": [ "intro/01_intro.md" ],
+    "Packer": [ "packer/01_packer.md" ],
+    "YAML": [ "yaml/01_yaml.md" ],
+    "Perl": [ "perl/01_perl.md", "perl/02_packergen.md" ],
+    "Closing": [ "closing/01_closing.md" ]
+  }
 }
