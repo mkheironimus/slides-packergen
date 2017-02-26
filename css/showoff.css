@@ -1,4 +1,9 @@
-body {
+body,
+.ui-widget,
+.ui-widget input,
+.ui-widget select,
+.ui-widget textarea,
+.ui-widget button {
   font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
   color: #222;
 }
@@ -44,15 +49,17 @@ pre code {
   /* explicitly size parent elements so the screen blanker works */
   html, body{
     height:100%;
-  }
-
-  body {
     margin:0;
     padding:0;
     overflow: hidden;
   }
 
-  body#download {
+    body.busy {
+      cursor: progress;
+    }
+
+  body#download,
+  body#stats {
     overflow: auto;
   }
 
@@ -67,6 +74,7 @@ pre code {
     background-repeat: no-repeat;
     background-position: center;
     background-size: cover;
+    position: relative;
   }
 
   .slide {
@@ -513,6 +521,20 @@ img#disconnected {
   padding: .5em 1.5em;
 }
 
+#navigationHover {
+  display: none;
+  position: absolute;
+  overflow: hidden;
+  width: 640px;
+  height: 500px;
+  z-index: 99999;
+  background-color: inherit;
+  margin: 0px;
+  box-shadow:0 0 25px rgba(0,0,0,0.35);
+  transform: scale(0.3);
+  transform-origin: 0 0;
+}
+
 #askedQuestions {
   margin: 0;
 }
@@ -574,10 +596,11 @@ img#disconnected {
 }
 
 /* Add Console "code highlighting" styles to resemble the look of a terminal window. */
-pre.highlight code.language-console {
+pre.highlight code.language-console,
+pre.highlight code.console {
   background: #222;
   background: url(titlebar/left.png) left top no-repeat, url(titlebar/right.png) right top no-repeat, url(titlebar/center.png) center top repeat-x #222;
-  color: #63de00;
+  color: #fff;
   padding: 30px 0.5em 0.5em;
   border: 1px solid #acacac;
   border-radius: 6px;
@@ -587,7 +610,8 @@ pre.highlight code.language-console {
   overflow: hidden;
 }
 
-pre.highlight code.language-powershellconsole {
+pre.highlight code.language-powershellconsole,
+pre.highlight code.powershellconsole {
   background: rgb(1, 36, 86);
   background: url(titlebar/powershell-controls.png) right top no-repeat, url(titlebar/powershell.png) left top repeat-x rgb(1, 36, 86);
   color: rgb(238, 237, 240);
@@ -616,6 +640,13 @@ pre.highlight code.language-powershellconsole.nochrome {
   overflow: hidden;
 }
 
+/* Diagram styling: overriding mermaid.css as needed */
+.language-render-diagram,
+.language-render-diagram .noteText,
+.language-render-diagram .node text,
+.language-render-diagram div.mermaidTooltip {
+  font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
 
 
 /**********************************
@@ -766,6 +797,66 @@ form .element {
   display: none;
 }
 
+/*****************
+ ***   modals   ***
+ *****************/
+.ui-dialog.ui-widget-content {
+  border: none;
+  box-shadow:0 0 25px rgba(0,0,0,0.35);
+}
+
+.ui-dialog .links,
+.ui-dialog .description,
+.ui-dialog select {
+  font-size: .75em;
+}
+
+.ui-dialog .ui-dialog-buttonpane{
+  border: none;
+  padding: 0;
+  margin-top: 0;
+}
+
+.ui-dialog .ui-widget-header {
+  border: none;
+  background-color: transparent;
+}
+
+.ui-dialog .setting {
+  margin-bottom: 8px;
+}
+
+.ui-dialog .setting input {
+  margin-left: 1em;
+}
+
+.ui-dialog .ui-dialog-buttonpane .ui-dialog-buttonset {
+  float: none;
+  padding-left: 1em;
+}
+
+.ui-dialog .links {
+  text-align: right;
+}
+
+.ui-dialog p,
+.ui-dialog select {
+  margin-left: 30px;
+}
+
+.ui-dialog p {
+  margin-top: .5em;
+  margin-bottom: .5em;
+}
+
+.no-close .ui-dialog-titlebar-close {
+  display: none;
+}
+
+ /*****************
+  *** end modal ***
+  *****************/
+
 /**********************************
  ***   supplemental materials   ***
  **********************************/
@@ -812,6 +903,7 @@ form .element {
   -webkit-border-radius: 5px;
   -khtml-border-radius: 5px;
   border-radius: 5px;
+  cursor: default;
 }
 /* and to the bar inside the row */
 #stats div.bar {
@@ -832,6 +924,68 @@ form .element {
   top: 0.15em;
   right: 0.25em;
 }
+
+/* Add the disclosure triangles */
+#stats div.row:before {
+  font-family: FontAwesome;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 1.25em;
+  text-decoration: inherit;
+}
+  #stats div.row.top:hover:before {
+    position: absolute;
+    content: "\f0da"; /* fa-caret-right */
+    margin-left: -0.5em;
+  }
+  #stats div.row.top.active:before {
+    position: absolute;
+    content: "\f0d7"; /* fa-caret-down */
+    margin-left: -0.75em;
+  }
+
+#stats h2 {
+  border-bottom: 1px solid #eee;
+}
+#stats #viewers,
+#stats #elapsed {
+  text-align: center;
+  min-height: 2em;
+}
+#stats #viewers.zoomline,
+#stats #elapsed.zoomline {
+  text-align: left;
+}
+#stats .zoomline .col.current,
+#stats .zoomline .col.current .inner {
+  background-color: #ffb105;
+  min-width: 5px;
+}
+#stats .zoomline .col.current:hover {
+  min-width: 10px;
+  background: #ffb105;
+  background: linear-gradient(#efefec, #ffb105);
+}
+#stats .zoomline .col.current:hover .inner,
+#stats .zoomline .col.current .inner:hover {
+  background-color: #f3708d;
+}
+
+
+#stats #stray,
+#stats #idle {
+  display: none;
+  width: 75%;
+  margin: 1em auto;
+  padding: 0.5em;
+  border: 1px solid #ccc;
+}
+  #stats #stray {
+    background-color: #8e030a;
+  }
+  #stats #idle {
+    background-color: #3a64c1;
+  }
 
 /* style all three boxes */
 #stats div#least,
@@ -872,6 +1026,7 @@ form .element {
 }
 #stats div#all div.bar {
   background: #66b366;
+  border-color: #000;
 }
 
 /* detail view */
@@ -912,21 +1067,81 @@ form .element {
   .callout.question,
   .callout.exercise,
   .callout.stop,
-  .callout.thumbsup {
+  .callout.thumbsup,
+  .callout.conversation,
+  .callout.glossary {
     padding-left: 3em;
   }
 
-  .callout.info:before     { content: "\f05a"; } /* fa-info-circle */
-  .callout.warning:before  { content: "\f071"; } /* fa-exclamation-triangle */
-  .callout.question:before { content: "\f059"; } /* fa-question-circle */
-  .callout.exercise:before { content: "\f41b"; } /* fa-pencil-square */
-  .callout.stop:before     { content: "\f05e"; } /* fa-ban */
-  .callout.thumbsup:before { content: "\f164"; } /* fa-thumbs-up */
+  .callout.info:before         { content: "\f05a"; } /* fa-info-circle */
+  .callout.warning:before      { content: "\f071"; } /* fa-exclamation-triangle */
+  .callout.question:before     { content: "\f059"; } /* fa-question-circle */
+  .callout.exercise:before     { content: "\f41b"; } /* fa-pencil-square */
+  .callout.stop:before         { content: "\f05e"; } /* fa-ban */
+  .callout.thumbsup:before     { content: "\f164"; } /* fa-thumbs-up */
+  .callout.conversation:before { content: "\f0e5"; } /* fa-comment */
+  .callout.glossary:before     { content: "\f02d"; } /* fa-book */
+
+/* callouts used on error pages */
+.error .callout {
+  padding-left: 4em;
+  margin: 1em;
+  background-color: #ffe0e0;
+  padding-bottom: 0;
+}
+  .error .callout p:first-of-type {
+    margin-top: 0;
+  }
 
 /**********************
 ***  end callouts   ***
 **********************/
+.callout.glossary a.label,
+ul.glossary.terms a.label {
+  display: block;
+  font-weight: 600;
+  text-decoration: none;
+}
+ul.glossary.terms a.return {
+  text-decoration: none;
+  padding-right: 3em;
+}
+a.term {
+  text-decoration: none;
+}
+a.term:after {
+  font-family: FontAwesome;
+  font-size: 0.8em;
+  vertical-align: super;
+  content: "\f27b";
+  text-decoration: none;/* fa-commenting-o */
+}
 
+
+/**********************
+***  glossary       ***
+**********************/
+
+
+/* Render hidden headlines so that when we print with wkhtmltopdf, we can use section
+   titles for page headers.  it would make sense to put this in the print section, but
+   then you get a weird double headline when previewing a print in the browser. */
+
+/* make this invisible as possible, while still rendering so that wkhtmltopdf doesn't ignore it */
+h1.section_title {
+  color: transparent !important;
+  opacity: 0 !important;
+  font-size: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* because the above section headers are h1 elements rendered only in print */
+.content:not(.cover) h1:not(.section_title) {
+  border-bottom: 2px solid #222;
+}
+
+/**** end hidden headlines ****/
 
 /* Tiny mobile devices. Larger devices scale automatically. */
 @media screen and (max-width: 320px)
@@ -939,8 +1154,9 @@ form .element {
     padding: 0;
   }
   body > #preso {
-    width: 976px;
-    zoom: 0.32;
+    transform: scale(.32);
+    transform-origin: 0 0;
+    width: 2928px;
   }
   #preso .slide {
     width: 100%;
@@ -989,20 +1205,6 @@ form .element {
   .slide:not(.center) {
     max-height: inherit !important;
     height: 100% !important; /* because otherwise handout notes are cutoff by the inline height set on the slide */
-  }
-
-  /* make this invisible as possible, while still rendering so that wkhtmltopdf doesn't ignore it */
-  h1.section_title {
-    color: transparent !important;
-    opacity: 0 !important;
-    font-size: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  /* because the above section headers are h1 elements rendered only in print */
-  .content:not(.cover) h1:not(.section_title) {
-    border-bottom: 2px solid #222;
   }
 
   /* prevent large images from running off the page */

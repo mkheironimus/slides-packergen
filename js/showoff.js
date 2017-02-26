@@ -25,27 +25,49 @@ var loadSlidesPrefix
 
 var mode = { track: true, follow: true };
 
+// since javascript doesn't have a built-in way to get to cookies easily,
+// let's just add our own data structure.
+document.cookieHash = {}
+document.cookie.split(';').forEach( function(item) {
+  var pos = item.indexOf('=');
+  var key = item.slice(0,pos).trim();
+  var val = item.slice(pos+1).trim();
+  try {
+    val = JSON.parse(val);
+  }
+  catch(e) { }
+
+  document.cookieHash[key] = val;
+});
+
 $(document).on('click', 'code.execute', executeCode);
 
 function setupPreso(load_slides, prefix) {
-	if (preso_started)
-	{
-		alert("already started")
-		return
+	if (preso_started) {
+		alert("already started");
+		return;
 	}
-	preso_started = true
+	preso_started = true;
+
+  if (! cssPropertySupported('flex') ) {
+    window.location = 'unsupported.html';
+  }
+
+  if (! cssPropertySupported('zoom') ) {
+    $('body').addClass('no-zoom');
+  }
 
 	// save our query string as an object for later use
 	query = $.parseQuery();
 
 	// Load slides fetches images
-	loadSlidesBool = load_slides
-	loadSlidesPrefix = prefix || '/'
-	loadSlides(loadSlidesBool, loadSlidesPrefix)
+	loadSlidesBool = load_slides;
+	loadSlidesPrefix = prefix || '/';
+	loadSlides(loadSlidesBool, loadSlidesPrefix);
 
   setupSideMenu();
 
-	doDebugStuff()
+	doDebugStuff();
 
 	// bind event handlers
 	toggleKeybinding('on');
@@ -61,11 +83,6 @@ function setupPreso(load_slides, prefix) {
   // give us the ability to disable tracking via url parameter
   if(query.track == 'false') mode.track = false;
 
-  // make sure that the next view doesn't bugger things on the first load
-  if(query.next == 'true') {
-    mode.next = true;
-  }
-
   // Make sure the slides always look right.
   // Better would be dynamic calculations, but this is enough for now.
   zoom();
@@ -74,25 +91,41 @@ function setupPreso(load_slides, prefix) {
   // yes, this is a global
   annotations = new Annotate();
 
+  // wait until the presentation is loaded to hook up the previews.
+  $("body").bind("showoff:loaded", function (event) {
+    $('#navigation li a.navItem').hover(function() {
+      var position = $(this).position();
+      $('#navigationHover').css({top: position.top, left: position.left + $('#navigation').width() + 5})
+      $('#navigationHover').html(slides.eq($(this).attr('rel')).html());
+      $('#navigationHover').show();
+    },function() {
+      $('#navigationHover').hide();
+    });
+  });
+
   // Open up our control socket
   if(mode.track) {
     connectControlChannel();
   }
 }
 
-function loadSlides(load_slides, prefix, reload) {
+function loadSlides(load_slides, prefix, reload, hard) {
   var url = loadSlidesPrefix + "slides";
   if (reload) {
     url += "?cache=clear";
   }
+
   //load slides offscreen, wait for images and then initialize
+  $('body').addClass('busy');
   if (load_slides) {
     $("#slides").load(url, false, function(){
-      $("#slides img").batchImageLoad({
-        loadingCompleteCallback: initializePresentation(prefix)
-      });
-      if (reload) {
+      if(hard) {
         location.reload(true);
+      }
+      else {
+        $("#slides img").batchImageLoad({
+          loadingCompleteCallback: initializePresentation(prefix)
+        });
       }
     })
   } else {
@@ -119,7 +152,7 @@ function initializePresentation(prefix) {
 		timeout: 0
 	})
 
-	setupMenu()
+	setupMenu();
 
 	if (slidesLoaded) {
 		showSlide()
@@ -129,6 +162,8 @@ function initializePresentation(prefix) {
 	}
 	setupSlideParamsCheck();
 
+  // Remove spinner in case we're reloading
+  $('body').removeClass('busy');
 
   $('pre.highlight code').each(function(i, block) {
     try {
@@ -168,7 +203,10 @@ function initializePresentation(prefix) {
     }
   });
 
-	$("#preso").trigger("showoff:loaded");
+  // initialize mermaid, but don't render yet since the slide sizes are indeterminate
+  mermaid.initialize({startOnLoad:false});
+
+  $("#preso").trigger("showoff:loaded");
 }
 
 function zoom(presenter) {
@@ -179,16 +217,19 @@ function zoom(presenter) {
   var wBody  = parseFloat(preso.parent().width());
 
   var newZoom = Math.min(hBody/hSlide, wBody/wSlide);
-  // Because Firefox's transform doesn't scale up very well
-  newZoom = newZoom > 1 ? 1 : newZoom - .04;
 
-  preso.css("zoom", newZoom);
-  preso.css("-ms-zoom", newZoom);
-  preso.css("-webkit-zoom", newZoom);
-  // Firefox doesn't support zoom
-  // Don't use standard transform to avoid modifying Chrome
-  preso.css("-moz-transform", "scale(" + newZoom + ")");
-  preso.css("-moz-transform-origin", "0 0 0");
+  // match the 65/35 split in the stylesheet for the side-by-side layout
+  if($("#preview").hasClass("beside")) {
+    wBody  *= 0.64;
+    newZoom = Math.min(hBody/hSlide, wBody/wSlide);
+  }
+
+  // Calculate margins to center the thing *before* scaling
+  var hMargin = (hBody - hSlide) /2;
+  var wMargin = (wBody - wSlide) /2;
+
+  preso.css("margin", hMargin + "px " + wMargin + "px");
+  preso.css("transform", "scale(" + newZoom + ")");
 
   // correct the zoom factor for the presenter
   if (presenter) {
@@ -200,7 +241,6 @@ function zoom(presenter) {
 
     // TODO: When we fix the presenter on IE so the viewport isn't all wack, we
     // may have to revisit this.
-
     var zoomLevel = Number( preso.css('zoom') ) || 1;
     annotations.zoom = 1 / zoomLevel
   }
@@ -322,11 +362,7 @@ function setupMenu() {
       sectionUL = '';
 
   slides.each(function(s, slide){
-    var slidePath = $(slide)
-      .find(".content")
-      .attr('ref')
-      .split('/')
-      .shift();
+    var slidePath = $(slide).attr('data-section');
     var headers = $(slide).children("h1, h2");
     var slideTitle = '';
     var content;
@@ -398,6 +434,13 @@ function setupMenu() {
   $("#navigation").append(nav);
 }
 
+// at some point this should get more sophisticated. Our needs are pretty minimal so far.
+function clearCookies() {
+  document.cookie = "sidebar=;expires=Thu, 21 Sep 1979 00:00:01 UTC;";
+  document.cookie = "layout=;expires=Thu, 21 Sep 1979 00:00:01 UTC;";
+  document.cookie = "notes=;expires=Thu, 21 Sep 1979 00:00:01 UTC;";
+}
+
 function checkSlideParameter() {
 	if (slideParam = currentSlideFromParams()) {
 		slidenum = slideParam;
@@ -408,6 +451,10 @@ function currentSlideFromName(name) {
   var count = 0;
   if(name.length > 0 ) {
   	slides.each(function(s, slide) {
+      if (name == $(slide).attr("id") ) {
+        found = count;
+        return false;
+      }
   	  if (name == $(slide).find(".content").attr("ref") ) {
   	    found = count;
   	    return false;
@@ -420,12 +467,13 @@ function currentSlideFromName(name) {
 
 function currentSlideFromParams() {
 	var result;
-	if (result = window.location.hash.match(/#([0-9]+)/)) {
-		return result[result.length - 1] - 1;
+	// Match numeric slide hashes: #241
+	if (result = window.location.hash.match(/^#([0-9]+)$/)) {
+		return result[1] - 1;
 	}
-	else {
-	  var hash = window.location.hash
-	  return currentSlideFromName(hash.substr(1, hash.length))
+	// Match slide, with optional internal mark: #slideName(+internal)
+	else if (result = window.location.hash.match(/^#([^+]+)\+?(.*)?$/)) {
+	  return currentSlideFromName(result[1]);
   }
 }
 
@@ -444,8 +492,9 @@ function setupSlideParamsCheck() {
 function gotoSlide(slideNum, updatepv) {
   var newslide = parseInt(slideNum);
   if (slidenum != newslide && !isNaN(newslide)) {
+    var back = (newslide == (slidenum - 1))
     slidenum = newslide;
-    showSlide(false, updatepv);
+    showSlide(back, updatepv);
   }
 }
 
@@ -519,29 +568,43 @@ function showSlide(back_step, updatepv) {
     $(currentSlide).find('li').removeClass('hidden');
   }
 
-  if(typeof slaveWindow == 'undefined') {
-    // hook up the annotations for viewing
-    currentSlide.find('canvas.annotations').annotationListener(annotations);
-  }
-  else {
-    if (mode.annotations) {
-      currentSlide.find('canvas.annotations').annotate(annotations);
+  if (typeof annotations !== 'undefined') {
+    if(typeof slaveWindow == 'undefined') {
+      // hook up the annotations for viewing
+      currentSlide.find('canvas.annotations').annotationListener(annotations);
+    }
+    else {
+      if (mode.annotations) {
+        currentSlide.find('canvas.annotations').annotate(annotations);
+      }
     }
   }
 
-
-  // Update presenter view, if we spawned one
-	if (updatepv && 'presenterView' in window && ! mode.next) {
+  // if we're a slave/display window
+  if('presenterView' in window) {
     var pv = window.presenterView;
-		pv.slidenum = slidenum;
-    pv.incrCurr = incrCurr
-    pv.incrSteps = incrSteps
-		pv.showSlide(true);
-		pv.postSlide();
 
-		pv.update();
+    // Update presenter view, if it's tracking us
+    if (updatepv) {
+      pv.slidenum  = slidenum;
+      pv.incrCurr  = incrCurr
+      pv.incrSteps = incrSteps
 
-	}
+      pv.showSlide(true);
+      pv.postSlide();
+      pv.update();
+    }
+
+    // if the slide is marked to autoplay videos, then fire them off!
+    if(currentSlide.hasClass('autoplay')) {
+      console.log('Autoplaying ' + currentSlide.attr('id'))
+      setTimeout(function(){
+        $(currentSlide).find('video').each(function() {
+          $(this).get(0).play();
+        });
+      }, 1000);
+    }
+  }
 
   // Update nav
   $('.highlighted').removeClass('highlighted');
@@ -555,6 +618,12 @@ function showSlide(back_step, updatepv) {
 
   // copy notes to the notes field for mobile.
   postSlide();
+
+  // make all bigly text tremendous
+  currentSlide.children('.content.bigtext').bigtext();
+
+  // render any diagrams on the slide
+  mermaid.init(undefined, currentSlide.find('code.language-render-diagram'));
 
   return ret;
 }
@@ -605,7 +674,7 @@ function determineIncremental()
 {
 	incrCurr = 0
 	incrCode = false
-	incrElem = currentSlide.find(".incremental > ul > li")
+	incrElem = currentSlide.find(".incremental li")
 	incrSteps = incrElem.size()
 	if(incrSteps == 0) {
 		// also look for commandline
@@ -885,7 +954,7 @@ function parseMessage(data) {
   try {
     switch (command['message']) {
       case 'current':
-        follow(command["current"]);
+        follow(command["current"], command["increment"]);
         break;
 
       case 'complete':
@@ -992,18 +1061,24 @@ function feedbackActivity() {
   setTimeout(function() { $("#hamburger").removeClass('highlight') }, 75);
 }
 
-function track() {
+function track(current) {
   if (mode.track && ws.readyState == WebSocket.OPEN) {
-    var slideName    = $("#slideFilename").text();
-    var slideEndTime = new Date().getTime();
-    var elapsedTime  = slideEndTime - slideStartTime;
+    var slideName = $("#slideFilename").text() || $("#slideFile").text(); // yey for consistency
 
-    // reset the timer
-    slideStartTime = slideEndTime;
+    if(current) {
+      ws.send(JSON.stringify({ message: 'track', slide: slideName}));
+    }
+    else {
+      var slideEndTime = new Date().getTime();
+      var elapsedTime  = slideEndTime - slideStartTime;
 
-    if (elapsedTime > 1000) {
-      elapsedTime /= 1000;
-      ws.send(JSON.stringify({ message: 'track', slide: slideName, time: elapsedTime}));
+      // reset the timer
+      slideStartTime = slideEndTime;
+
+      if (elapsedTime > 1000) {
+        elapsedTime /= 1000;
+        ws.send(JSON.stringify({ message: 'track', slide: slideName, time: elapsedTime}));
+      }
     }
   }
 }
@@ -1015,10 +1090,29 @@ function editSlide() {
   window.open(link);
 }
 
-function follow(slide) {
+function follow(slide, newIncrement) {
   if (mode.follow) {
+    var lastSlide = slidenum;
     console.log("New slide: " + slide);
     gotoSlide(slide);
+
+    if( ! $("body").hasClass("presenter") ) {
+      switch (slidenum - lastSlide) {
+        case -1:
+          fireEvent("showoff:prev");
+          break;
+
+        case 1:
+          fireEvent("showoff:next");
+          break;
+      }
+
+      // if the master says we're incrementing. Use a loop in case the viewer is out of sync
+      while(newIncrement > incrCurr) {
+        increment();
+      }
+
+    }
   }
 }
 
@@ -1027,41 +1121,54 @@ function getPosition() {
   ws.send(JSON.stringify({ message: 'position' }));
 }
 
+function fireEvent(ev) {
+  var event = jQuery.Event(ev);
+  $(currentSlide).find(".content").trigger(event);
+  if (event.isDefaultPrevented()) {
+    return;
+  }
+}
+
+function increment() {
+  showIncremental(incrCurr);
+
+  var incrEvent = jQuery.Event("showoff:incr");
+  incrEvent.slidenum = slidenum;
+  incrEvent.incr = incrCurr;
+  $(currentSlide).find(".content").trigger(incrEvent);
+
+  incrCurr++;
+}
+
 function prevStep(updatepv)
 {
-	var event = jQuery.Event("showoff:prev");
-	$(currentSlide).find(".content").trigger(event);
-	if (event.isDefaultPrevented()) {
-			return;
-	}
+  $(currentSlide).find('video').each(function() {
+    console.log('Pausing videos on ' + currentSlide.attr('id'))
+    $(this).get(0).pause();
+  });
 
+  fireEvent("showoff:prev");
   track();
-
-	slidenum--
-	return showSlide(true, updatepv) // We show the slide fully loaded
+  slidenum--;
+  return showSlide(true, updatepv); // We show the slide fully loaded
 }
 
 function nextStep(updatepv)
 {
-	var event = jQuery.Event("showoff:next");
-	$(currentSlide).find(".content").trigger(event);
-	if (event.isDefaultPrevented()) {
-			return;
-	}
+  $(currentSlide).find('video').each(function() {
+    console.log('Pausing videos on ' + currentSlide.attr('id'))
+    $(this).get(0).pause();
+  });
 
-	track();
+  fireEvent("showoff:next");
+  track();
 
-	if (incrCurr >= incrSteps) {
-		slidenum++
-		return showSlide(false, updatepv)
-	} else {
-		showIncremental(incrCurr);
-		var incrEvent = jQuery.Event("showoff:incr");
-		incrEvent.slidenum = slidenum;
-		incrEvent.incr = incrCurr;
-		$(currentSlide).find(".content").trigger(incrEvent);
-		incrCurr++;
-	}
+  if (incrCurr >= incrSteps) {
+    slidenum++;
+    return showSlide(false, updatepv);
+  } else {
+    increment();
+  }
 }
 
 // carrying on our grand tradition of overwriting functions of the same name with presenter.js
@@ -1077,6 +1184,9 @@ function postSlide() {
     }
 
 		$('#notes').html(notes);
+
+		// tell Showoff what slide we ended up on
+		track(true);
 	}
 }
 
@@ -1160,19 +1270,20 @@ function keyDown(event){
   }
 
   switch(getAction(event)) {
-    case 'DEBUG':     toggleDebug();    break;
-    case 'PREV':      prevStep();       break;
-    case 'NEXT':      nextStep();       break;
-    case 'RELOAD':    reloadSlides();   break;
-    case 'CONTENTS':  toggleContents(); break;
-    case 'HELP':      toggleHelp();     break;
-    case 'BLANK':     blankScreen();    break;
-    case 'FOOTER':    toggleFooter();   break;
-    case 'FOLLOW':    toggleFollow();   break;
-    case 'NOTES':     toggleNotes();    break;
-    case 'CLEAR':     removeResults();  break;
-    case 'PAUSE':     togglePause();    break;
-    case 'PRESHOW':   togglePreShow();  break;
+    case 'DEBUG':     toggleDebug();      break;
+    case 'PREV':      prevStep();         break;
+    case 'NEXT':      nextStep();         break;
+    case 'REFRESH':   reloadSlides();     break;
+    case 'RELOAD':    reloadSlides(true); break;
+    case 'CONTENTS':  toggleContents();   break;
+    case 'HELP':      toggleHelp();       break;
+    case 'BLANK':     blankScreen();      break;
+    case 'FOOTER':    toggleFooter();     break;
+    case 'FOLLOW':    toggleFollow();     break;
+    case 'NOTES':     toggleNotes();      break;
+    case 'CLEAR':     removeResults();    break;
+    case 'PAUSE':     togglePause();      break;
+    case 'PRESHOW':   togglePreShow();    break;
     case 'EXECUTE':
       debug('executeCode');
       executeVisibleCodeBlock();
@@ -1231,11 +1342,17 @@ function toggleDebug () {
   doDebugStuff();
 }
 
-function reloadSlides () {
-  if (confirm('Are you sure you want to reload the slides?')) {
-    $('html,body').css('cursor','progress');
-    loadSlides(loadSlidesBool, loadSlidesPrefix, true);
-    showSlide();
+function reloadSlides (hard) {
+  if(hard) {
+    var message = 'Are you sure you want to reload Showoff?';
+  }
+  else {
+    var message = "Are you sure you want to refresh the slide content?\n\n";
+    message    += '(Use `RELOAD` to fully reload the entire UI)';
+  }
+
+  if (confirm(message)) {
+    loadSlides(loadSlidesBool, loadSlidesPrefix, true, hard);
   }
 }
 
@@ -1270,7 +1387,7 @@ var removeResults = function() {
 
 var print = function(text) {
 	removeResults();
-	var _results = $('<div>').addClass('results').html('<pre>'+$.print(text, {max_string:1500})+'</pre>');
+	var _results = $('<div>').addClass('results').html('<pre>' + String(text).substring(0, 1500) + '</pre>');
 	$('body').append(_results);
 	_results.click(removeResults);
 
@@ -1520,15 +1637,64 @@ function togglePause() {
  Stats page
  ********************/
 
-function setupStats()
+function setupStats(data)
 {
   $("#stats div#all div.detail").hide();
   $("#stats div#all div.row").click(function() {
+      $(this).toggleClass('active');
       $(this).find("div.detail").slideToggle("fast");
   });
+
+  ['stray', 'idle'].forEach(function(stat){
+    var percent = data[stat+'_p'];
+    var selector = '#'+stat;
+
+    if(percent > 25) {
+      $(selector).show();
+      $(selector+' .label').text(percent+'%');
+    }
+    else {
+      $(selector).hide();
+    }
+  });
+
+  var location = window.location.pathname == '/presenter' ? '#' : '/#';
+  var viewers  = data['viewers'];
+  if (viewers) {
+    if (viewers.length == 1 && viewers[0][3] == 'current') {
+      $("#viewers").removeClass('zoomline');
+      $("#viewers").text("All audience members are viewing the presenter's slide.");
+    }
+    else {
+      $("#viewers").zoomline({
+        max: data['viewmax'],
+        data: viewers,
+        click: function(element) { window.location = (location + element.attr("data-left")); }
+      });
+    }
+  }
+
+  if (data['elapsed']) {
+    $("#elapsed").zoomline({
+      max: data['maxtime'],
+      data: data['elapsed'],
+      click: function(element) { window.location = (location + element.attr("data-left")); }
+    });
+  }
 }
 
 /* Is this a mobile device? */
 function mobile() {
   return ( $(window).width() <= 480 )
+}
+
+/* check browser support for one or more css properties */
+function cssPropertySupported(properties) {
+  properties = typeof(properties) == 'string' ? Array(properties) : properties
+
+  var supported = properties.filter(function(property){
+    return property in document.body.style;
+  });
+
+  return properties.length == supported.length;
 }

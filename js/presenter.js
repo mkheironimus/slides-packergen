@@ -1,6 +1,6 @@
 // presenter js
 var slaveWindow = null;
-var nextWindow = null;
+var nextWindow  = null;
 var notesWindow = null;
 
 var paceData = [];
@@ -9,7 +9,7 @@ section = 'notes'; // which section the presenter has chosen to view
 
 $(document).ready(function(){
   // set up the presenter modes
-  mode = { track: true, follow: true, update: true, slave: false, next: false, notes: false, annotations: false};
+  mode = { track: true, follow: true, update: true, slave: false, notes: false, annotations: false, layout: 'default'};
 
   // attempt to open another window for the presentation if the mode defaults
   // to enabling this. It does not by default, so this is likely a no-op.
@@ -18,19 +18,56 @@ $(document).ready(function(){
   // the presenter window doesn't need the reload on resize bit
   $(window).unbind('resize');
 
-  $("#startTimer").click(function() { startTimer()  });
-  $("#pauseTimer").click(function() { toggleTimer() });
-  $("#stopTimer").click(function()  { stopTimer()   });
+  $("#startTimer").click(    function() { startTimer()    });
+  $("#pauseTimer").click(    function() { toggleTimer()   });
+  $("#stopTimer").click(     function() { stopTimer()     });
+  $("#close-sidebar").click( function() { toggleSidebar() });
+  $("#edit").click(          function() { editSlide()     });
+// browser security causes a click event to react differently than an actual user click. Even though they're the same damn thing.
+//  $("#report").click(        function() { reportIssue()   });
+  $("#slaveWindow").click(   function() { toggleSlave()   });
+  $("#printSlides").click(   function() { printSlides()   });
+  $("#settings").click(      function() { $("#settings-modal").dialog("open"); });
+  $("#slideSource a").click( function() { openEditor() });
+  $("#notesToggle").click(   function() { toggleNotes() });
+  $("#clearCookies").click(  function() { clearCookies() });
+  $("#nextWinCancel").click( function() { chooseLayout('default') });
+  $("#openNextWindow").click(function() { openNext() });
 
-  /* zoom slide to match preview size, then set up resize handler. */
-  zoom(true);
-  $(window).resize(function() { zoom(true); });
-
-  $('#statslink').click(function(e) {
-    presenterPopupToggle('/stats', e);
+  $("#notes-wrapper .fa-minus").click( function() {
+    notesFontSize('decrease');
   });
-  $('#downloadslink').click(function(e) {
-    presenterPopupToggle('/download', e);
+  $("#notes-wrapper .fa-dot-circle-o").click( function() {
+    notesFontSize('reset');
+  });
+  $("#notes-wrapper .fa-plus").click( function() {
+    notesFontSize('increase');
+  });
+
+  $('#statslink').click(function(e) { presenterPopupToggle('/stats', e); });
+  $('#downloadslink').click(function(e) { presenterPopupToggle('/download', e); });
+
+  $('#layoutSelector').change(function(e) { chooseLayout(e.target.value); });
+
+  chooseLayout(null);
+
+  $("#settings-modal").dialog({
+    autoOpen: false,
+    dialogClass: "no-close",
+    draggable: false,
+    height: "auto",
+    modal: true,
+    resizable: false,
+    width: 400,
+    buttons: {
+      Close: function() {
+        $( this ).dialog( "close" );
+      }
+    }
+  });
+
+  $("#annotationsToggle").checkboxradio({
+    icon: false
   });
 
   // Bind events for mobile viewing
@@ -52,6 +89,22 @@ $(document).ready(function(){
         gotoSlide(data);
       });
     });
+  }
+
+  // set up notes resizing
+  $( "#notes" ).resizable({
+    minHeight: 0,
+    handles: {"n": $(".notes-grippy")}
+  });
+  $("#notes").resize(function(){
+    document.cookie = "notes="+$('#notes').height();
+  });
+
+  // restore the UI settings
+  var ui = document.cookieHash['ui'];
+  $('#notes').height(document.cookieHash['notes']);
+  if(document.cookieHash['sidebar'] == false) {
+    toggleSidebar();
   }
 
   // Hide with js so jquery knows what display property to assign when showing
@@ -95,11 +148,32 @@ $(document).ready(function(){
     sendAnnotationConfig('fillColor', color);
   });
 
+  $('#statusbar .controls input').checkboxradio({icon: false });
   $('#remoteToggle').change( toggleFollower );
   $('#followerToggle').change( toggleUpdater );
   $('#annotationsToggle').change( toggleAnnotations );
 
   setInterval(function() { updatePace() }, 1000);
+
+  setInterval(function() {
+    $.getJSON("/stats_data", function( json ) {
+      var percent = json['stray_p'];
+      if(percent > 25) {
+        $('#topbar #statslink').addClass('warning');
+        $('#topbar #statslink').attr('title', percent + "% of your audience is not viewing the same slide you are.");
+      }
+      else {
+        $('#stray').hide(); // in case the popup is open
+        $('#topbar #statslink').removeClass('warning');
+        $('#topbar #statslink').attr('title', "");
+      }
+
+      if( $('#presenterPopup #stats').is(':visible') ) {
+        setupStats(json);
+      }
+    });
+
+  }, 30000);
 
   // Tell the showoff server that we're a presenter
   register();
@@ -118,6 +192,10 @@ $(document).ready(function(){
       sendAnnotation('click', x, y);
     }
   };
+
+  /* zoom slide to match preview size, then set up resize handler. */
+  zoom(true);
+  $(window).resize(function() { zoom(true); });
 
 });
 
@@ -143,11 +221,9 @@ function presenterPopupToggle(page, event) {
 
       content.attr('id', page.substring(1, page.length));
       content.append(link);
-      /* use .sibliings() because of how jquery formats $(data) */
+      /* use .siblings() because of how jquery formats $(data) */
       content.append($(data).siblings('#wrapper').html());
       popup.append(content);
-
-      setupStats(); // this function is in showoff.js because /stats does not load presenter.js
 
       $('body').append(popup);
       popup.slideDown(200); // #presenterPopup is display: none by default
@@ -175,16 +251,26 @@ function openEditor() {
   $.get(link);
 }
 
+function windowIsClosed(window)
+{
+  return(window == null || typeof(window) == 'undefined' || window.closed);
+}
+
+function windowIsOpen(window) {
+  return (window && typeof(window) != 'undefined' && !window.closed)
+}
+
 function toggleSlave() {
   mode.slave = !mode.slave;
   openSlave();
 }
 
+// Open, or maintain connection & reopen slave window.
 function openSlave()
 {
   if (mode.slave) {
     try {
-      if(slaveWindow == null || typeof(slaveWindow) == 'undefined' || slaveWindow.closed){
+      if(windowIsClosed(slaveWindow)){
           slaveWindow = window.open('/' + window.location.hash, 'toolbar');
       }
       else if(slaveWindow.location.hash != window.location.hash) {
@@ -223,67 +309,67 @@ function openSlave()
 
 function nextSlideNum(url) {
   // Some fudging because the first slide is slide[0] but numbered 1 in the URL
-  console.log(typeof(url));
   var snum;
   if (typeof(url) == 'undefined') { snum = currentSlideFromParams()+1; }
   else { snum = currentSlideFromParams()+2; }
   return snum;
 }
 
-function toggleNext() {
-  mode.next = !mode.next;
-  openNext();
+// allows subsystems to pin the sidebar open. The sidebar will only hide when
+// all pins have been removed.
+function pinSidebar(pin) {
+  $('#topbar #close-sidebar').addClass('disabled');
+  $('#topbar #close-sidebar').removeClass('fa-rotate-90');
+  $('#sidebar').show();
+  zoom(true);
+
+  mode.pinnedSidebar = mode.pinnedSidebar || []
+  if (mode.pinnedSidebar.indexOf(pin) == -1) {
+    mode.pinnedSidebar.push(pin);
+  }
 }
 
-function openNext()
-{
-  if (mode.next) {
-    try {
-      if(nextWindow == null || typeof(nextWindow) == 'undefined' || nextWindow.closed){
-          nextWindow = window.open('/?track=false&feedback=false&next=true#' + nextSlideNum(true),'','width=320,height=300');
-      }
-      else if(nextWindow.location.hash != '#' + nextSlideNum(true)) {
-        // maybe we need to reset content?
-        nextWindow.location.href = '/?track=false&feedback=false&next=true#' + nextSlideNum(true);
-      }
+function unpinSidebar(pin) {
+  if (Array.isArray(mode.pinnedSidebar)) {
+    mode.pinnedSidebar = mode.pinnedSidebar.filter(function(item) {
+      return item !== pin;
+    });
 
-      // maintain the pointer back to the parent.
-      nextWindow.presenterView = window;
-      nextWindow.mode = { track: false, next: true, follow: true };
-
-      $('#nextWindow').addClass('enabled');
-    }
-    catch(e) {
-      console.log('Failed to open or connect next window. Popup blocker?');
+    if(mode.pinnedSidebar.length == 0) {
+      $('#topbar #close-sidebar').removeClass('disabled');
+      delete mode.pinnedSidebar;
     }
   }
-  else {
-    try {
-      nextWindow && nextWindow.close();
-      $('#nextWindow').removeClass('enabled');
-    }
-    catch (e) {
-      console.log('Next window failed to close properly.');
-    }
+}
+
+function toggleSidebar() {
+  if (!mode.pinnedSidebar) {
+    $('#topbar #close-sidebar').toggleClass('fa-rotate-90');
+    $('#sidebar').toggle();
+    zoom(true);
+
+    document.cookie = "sidebar="+$('#sidebar').is(':visible');
   }
 }
 
 function toggleNotes() {
   mode.notes = !mode.notes;
-  openNotes();
-}
 
-function openNotes()
-{
   if (mode.notes) {
     try {
-      if(notesWindow == null || typeof(notesWindow) == 'undefined' || notesWindow.closed){
-          // yes, the explicit address is needed. Because Chrome.
-          notesWindow = window.open('about:blank', '', 'width=350,height=450');
-          notesWindow.document.title = "Showoff Notes";
+      if(windowIsClosed(notesWindow)){
+        notesWindow = blankStyledWindow("Showoff Notes", 'width=350,height=450', 'notes', true);
+        window.setTimeout(function() {
+          // call back and update the parent presenter if the window is closed
+          notesWindow.onunload = function(e) {
+            notesWindow.opener.toggleNotes();
+          };
+
           postSlide();
+        }, 500);
+
       }
-      $('#notesWindow').addClass('enabled');
+      $('#notes').addClass('hidden');
     }
     catch(e) {
       console.log('Failed to open notes window. Popup blocker?');
@@ -292,12 +378,65 @@ function openNotes()
   else {
     try {
       notesWindow && notesWindow.close();
-      $('#notesWindow').removeClass('enabled');
+      $('#notes').removeClass('hidden');
     }
     catch (e) {
       console.log('Notes window failed to close properly.');
     }
   }
+
+  zoom(true);
+}
+
+function notesFontSize(action) {
+  var current = parseInt($('#notes').css('font-size'));
+  switch (action) {
+    case 'increase':
+      $('#notes').css('font-size', current * 1.1);
+      break;
+
+    case 'decrease':
+      $('#notes').css('font-size', current * 0.9);
+      break;
+
+    case 'reset':
+      $('#notes').css('font-size', '');
+      break;
+  }
+}
+
+function blankStyledWindow(title, dimensions, classes, resizable) {
+  // yes, the explicit address is needed. Because Chrome.
+  var opts = "status=0,toolbar=0,location=0,menubar=0,"+dimensions;
+  if(resizable) {
+    opts += ",resizable=1,scrollbars=1";
+  }
+  newWindow = window.open('about:blank','', opts);
+
+  // allow time for the window to load for Firefox and IE
+  window.setTimeout(function() {
+    newWindow.document.title = title;
+
+    // IE is terrible and will explode if you try to add a DOM element to another
+    // document. Instead, serialize everything into STRINGS and let jquery rebuild
+    // them into elements again in the context of the other document.
+    // Because IE.
+
+    $(newWindow.document.head).append('<base href="' + window.location.origin + '"/>');
+    $('link[rel="stylesheet"]').each(function() {
+      var href  = $(this).attr('href');
+      var style = '<link rel="stylesheet" type="text/css" href="' + href + '">'
+      $(newWindow.document.head).append(style);
+    });
+
+    $(newWindow.document.body).addClass('floating');
+    if(classes) {
+      $(newWindow.document.body).addClass(classes);
+    }
+
+  }, 500);
+
+  return newWindow;
 }
 
 function printSlides()
@@ -321,6 +460,9 @@ function postQuestion(question, questionID) {
 
   $("#unanswered").append(questionItem);
   updateQuestionIndicator();
+
+  // don't allow the sidebar to hid when questions exist
+  pinSidebar('question');
 }
 
 function removeQuestion(questionID) {
@@ -329,6 +471,10 @@ function removeQuestion(questionID) {
           .remove();
   $('#answered').append($(question));
   updateQuestionIndicator();
+
+  if($('#unanswered li').length == 0) {
+    unpinSidebar('question');
+  }
 }
 
 function updateQuestionIndicator() {
@@ -422,7 +568,7 @@ function markCompleted(questionID) {
 function update() {
   if(mode.update) {
     var slideName = $("#slideFile").text();
-    ws.send(JSON.stringify({ message: 'update', slide: slidenum, name: slideName}));
+    ws.send(JSON.stringify({ message: 'update', slide: slidenum, name: slideName, increment: incrCurr}));
   }
 }
 
@@ -482,29 +628,41 @@ function postSlide() {
     $('#notes').html(notes);
 
     var sections = getCurrentSections();
-    if(sections.size() > 1) {
-      var ul = $('<ul>').addClass('section-selector');
-      sections.each(function(idx, value){
-        var li = $('<li/>').appendTo(ul);
+
+    var ul = $('.section-selector').empty();
+    if(sections.size() > 0) {
+      sections.each( function (idx, value) {
+        var li = $('<li>').prependTo(ul);
         var a  = $('<a/>')
                       .text(value)
                       .attr('href','javascript:setCurrentSection("'+value+'");')
                       .appendTo(li);
 
-        if(section == value) {
+        if(section === value) {
           li.addClass('selected');
         }
       });
-
-      $('#notes').prepend(ul);
     }
 
-    if (notesWindow && typeof(notesWindow) != 'undefined' && !notesWindow.closed) {
+    var nextIndex = slidenum + 1;
+    var nextSlide = (nextIndex >= slides.size()) ? '' : slides.eq(nextIndex).html();
+    var prevSlide = (slidenum > 0) ? slides.eq(slidenum - 1).html() : ''
+
+    $('#nextSlide .container').html(nextSlide);
+    $('#prevSlide .container').html(prevSlide);
+
+    if (windowIsOpen(nextWindow)) {
+      $(nextWindow.document.body).html(nextSlide);
+    }
+
+    if (windowIsOpen(notesWindow)) {
       $(notesWindow.document.body).html(notes);
     }
 
 		var fileName = currentSlide.children('div').first().attr('ref');
 		$('#slideFile').text(fileName);
+    $('#progress').progressbar({ max: slideTotal })
+                  .progressbar('value', slidenum);
 
     $("#notes div.form.wrapper").each(function(e) {
       renderFormInterval = renderFormWatcher($(this));
@@ -522,18 +680,19 @@ function presenterKeyDown(event){
   }
 
   switch(getAction(event)) {
-    case 'DEBUG':     toggleDebug();    break;
-    case 'PREV':      presPrevStep();   break; // Watch that this uses presPrevStep and not prevStep
-    case 'NEXT':      presNextStep();   break; // Same here
-    case 'RELOAD':    reloadSlides();   break;
-    case 'CONTENTS':  toggleContents(); break;
-    case 'HELP':      toggleHelp();     break;
-    case 'BLANK':     blankScreen();    break;
-    case 'FOOTER':    toggleFooter();   break;
-    case 'FOLLOW':    toggleFollow();   break;
-    case 'NOTES':     toggleNotes();    break;
-    case 'PAUSE':     togglePause();    break;
-    case 'PRESHOW':   togglePreShow();  break;
+    case 'DEBUG':     toggleDebug();      break;
+    case 'PREV':      presPrevStep();     break; // Watch that this uses presPrevStep and not prevStep
+    case 'NEXT':      presNextStep();     break; // Same here
+    case 'REFRESH':   reloadSlides();     break;
+    case 'RELOAD':    reloadSlides(true); break;
+    case 'CONTENTS':  toggleContents();   break;
+    case 'HELP':      toggleHelp();       break;
+    case 'BLANK':     blankScreen();      break;
+    case 'FOOTER':    toggleFooter();     break;
+    case 'FOLLOW':    toggleFollow();     break;
+    case 'NOTES':     toggleNotes();      break;
+    case 'PAUSE':     togglePause();      break;
+    case 'PRESHOW':   togglePreShow();    break;
     case 'CLEAR':
       removeResults();
       try {
@@ -599,6 +758,9 @@ function startTimer() {
   $("#pauseTimer").show();
   $("#timerDisplay").show();
   $("#timerSection").addClass('open');
+
+  // keep the sidebar open while the timer is active
+  pinSidebar('timer');
 
   var time = parseInt( $("#timerMinutes").val() ) * 60;
   if(time) {
@@ -672,6 +834,8 @@ function toggleTimer() {
 function endTimer() {
   $('#stopTimer').val('Reset');
   $("#pauseTimer").hide();
+
+  // don't unpin yet, we don't want the timer to just wander off into the distance!
 }
 
 function stopTimer() {
@@ -685,6 +849,9 @@ function stopTimer() {
   $("#pauseTimer").hide();
   $("#timerDisplay").hide();
   $('#timerSection').removeClass();
+
+  // only unpin when the user has dismissed the timer
+  unpinSidebar('timer');
 }
 
 /********************
@@ -705,18 +872,120 @@ function toggleUpdater()
 /********************
  Annotations
  ********************/
-function toggleAnnotations()
-{
+function toggleAnnotations() {
   mode.annotations = $("#annotationsToggle").prop("checked");
 
   if(mode.annotations) {
     $('#annotationToolbar').show();
-    currentSlide.find('canvas.annotations').annotate(annotations);
     $('canvas.annotations').show();
+    if (typeof(currentSlide) != 'undefined') {
+      currentSlide.find('canvas.annotations').annotate(annotations);
+    }
   }
   else {
     $('#annotationToolbar').hide();
     $('canvas.annotations').stopAnnotation();
     $('canvas.annotations').hide();
   }
+}
+
+function openNext() {
+  $("#nextWindowConfirmation").hide();
+  try {
+    if(windowIsClosed(nextWindow)){
+      nextWindow = blankStyledWindow("Next Slide Preview", 'width=320,height=300', 'next');
+
+      // Firefox doesn't load content properly unless we delay it slightly. Yay for race conditions.
+//      nextWindow.addEventListener("unload", function() {
+      window.setTimeout(function() {
+        // call back and update the parent presenter if the window is closed
+        nextWindow.onunload = function(e) {
+          nextWindow.opener.chooseLayout('default');
+        };
+
+        postSlide();
+      }, 500);
+      $("#settings-modal").dialog("close");
+    }
+  }
+  catch(e) {
+    console.log(e);
+    console.log('Failed to open or connect next window. Popup blocker?');
+  }
+}
+
+/********************
+ Layout selection incorporates previews and the old next window
+ ********************/
+function chooseLayout(layout)
+{
+  // yay for half-baked data storage schemes
+  layout = layout || document.cookieHash['layout'] || 'default';
+
+  // in case we're being called externally, make the UI match
+  $('#layoutSelector').val(layout);
+  $("#nextWindowConfirmation").hide();
+  console.log("Setting layout to " + layout);
+
+  // change focus so we don't inadvertently change layout again by changing slides
+  $("#preview").focus();
+  $("#layoutSelector").blur();
+
+  // what we are switching *from*
+  switch(mode.layout) {
+    case 'thumbs':
+      $('#preview').removeClass('thumbs');
+      $('#preview .thumb').hide();
+      break;
+
+    case 'beside':
+      $('#preview').removeClass('beside');
+      $('#preview #nextSlide .container').removeAttr("style");
+      $('#preview #nextSlide').hide();
+      break;
+
+    case 'floating':
+      try {
+        if (nextWindow) {
+          // unregister the event so we don't accidentally double-fire
+          nextWindow.window.onunload = null;
+          nextWindow.close();
+        }
+      }
+      catch (e) {
+        console.log(e);
+        console.log('Next window failed to close properly.');
+      }
+      break;
+
+    default:
+
+  }
+
+  // what we are switching *to*
+  switch(layout) {
+    case 'thumbs':
+      $('#preview').addClass('thumbs');
+      $('#preview .thumb').show();
+      break;
+
+    case 'beside':
+      $('#preview').addClass('beside');
+      $('#preview #nextSlide').show();
+
+      var w = $('#nextSlide .container').width();
+      $('#nextSlide .container').height(w*.75)
+      break;
+
+    case 'floating':
+      $("#nextWindowConfirmation").show();
+      break;
+
+    default:
+
+  }
+
+  document.cookie = "layout="+layout
+  mode.layout = layout;
+  zoom(true);
 }

@@ -10,26 +10,30 @@
   
 
   <link rel="stylesheet" type="text/css" href=".//css/highlight/default.css"  />
-  <link rel="stylesheet" type="text/css" href=".//css/showoff.css" />
+  <link rel="stylesheet" type="text/css" href=".//css/mermaid-6.0.0.css" />
   <link rel="stylesheet" type="text/css" href=".//css/font-awesome-4.4.0/css/font-awesome.min.css">
+  <link rel="stylesheet" type="text/css" href=".//css/jquery-ui-1.12.1.css">
+  <link rel="stylesheet" type="text/css" href=".//css/showoff.css?v=0.17.0" />
+  <link rel="stylesheet" type="text/css" href=".//css/zoomline-0.0.1.css">
 
   <script type="text/javascript" src=".//js/jquery-2.1.4.min.js"></script>
 
-  <script type="text/javascript" src=".//js/jquery.cycle.all.js"></script>
-  <script type="text/javascript" src=".//js/jquery-print.js"></script>
-  <script type="text/javascript" src=".//js/jquery.batchImageLoad.js"></script>
-  <script type="text/javascript" src=".//js/jquery.parsequery.min.js"></script>
-  <script type="text/javascript" src=".//js/jquery.doubletap-0.1.js"></script>
-  <script type="text/javascript" src=".//js/jTypeWriter.js"> </script>
-  <script type="text/javascript" src=".//js/highlight.pack.js"></script>
+  <script type="text/javascript" src=".//js/jquery.cycle.all-2.8.0.js"></script>
+  <script type="text/javascript" src=".//js/jquery.batchImageLoad-1.0.0.js"></script>
+  <script type="text/javascript" src=".//js/jquery.parsequery.min-6a20f83.js"></script>
+  <script type="text/javascript" src=".//js/jquery.doubletap-4ff02c5.js"></script>
+  <script type="text/javascript" src=".//js/jTypeWriter-1.1.js"></script>
+  <script type="text/javascript" src=".//js/bigtext-0.1.8.js"></script>
+  <script type="text/javascript" src=".//js/zoomline-0.0.1.js"></script>
+  <script type="text/javascript" src=".//js/highlight.pack-9.2.0.js"></script>
+  <script type="text/javascript" src=".//js/mermaid-6.0.0-min.js"></script>
 
-  <script type="text/javascript" src=".//js/coffee-script.js"></script>
+  <script type="text/javascript" src=".//js/coffee-script-1.1.3-pre.js"></script>
 
-  <script type="text/javascript" src=".//js/annotations.js"></script>
-  <script type="text/javascript" src=".//js/showoff.js"></script>
+  <script type="text/javascript" src=".//js/annotations.js?v=0.17.0"></script>
+  <script type="text/javascript" src=".//js/showoff.js?v=0.17.0"></script>
 
   
-    
     <link rel="stylesheet" href=".//file/custom.css" type="text/css"/>
   
 
@@ -52,7 +56,8 @@
   "down": "NEXT",
   "right": "NEXT",
   "pagedown": "NEXT",
-  "r": "RELOAD",
+  "R": "RELOAD",
+  "r": "REFRESH",
   "c": "CONTENTS",
   "t": "CONTENTS",
   "h": "HELP",
@@ -216,8 +221,9 @@
 
 <i id="hamburger" class="fa fa-bars fa-2x"></i>
 <div id="sidebarWrapper">
+    <div id="navigationHover"></div>
     <div id="feedbackSidebar" class="sideMenu">
-    <img id="disconnected" src="/css/disconnected.png">
+    <img id="disconnected" src=".//css/disconnected.png">
     <h3>Showoff Menu</h3>
     <div id="navToggle" class="buttonWrapper"><i class=" fa fa-bookmark"></i> Table of Contents</div>
     <div id="navigation" class="submenu"></div>
@@ -267,9 +273,14 @@
   <hr />
 
   <div>
-    <span class="description">Reload all slides.</span>
-    <span class="action">RELOAD</span>
+    <span class="description">Refresh slide content.</span>
+    <span class="action">REFRESH</span>
     <span class="hotkeys"><span class="key">r</span></span>
+  </div>
+  <div>
+    <span class="description">Completely reload Showoff.</span>
+    <span class="action">RELOAD</span>
+    <span class="hotkeys"><span class="key">R</span></span>
   </div>
   <div>
     <span class="description">Blank the screen.</span>
@@ -330,7 +341,7 @@
 </footer>
 
 <div id="slides" class="offscreen" style="display:none;">
-<div id="intro_01_intro1" class="slide title" data-transition="none">
+<div data-section="Intro" data-title="01_intro" id="intro_01_intro1" class="slide title" data-transition="none">
 <div class="content title" ref="intro/01_intro:1">
 <h1>Human-Friendly Configuration with Perl 6</h1>
 
@@ -355,7 +366,7 @@
 </div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="intro_01_intro2" class="slide " data-transition="none">
+<div data-section="Intro" data-title="01_intro" id="intro_01_intro2" class="slide" data-transition="none">
 <div class="content " ref="intro/01_intro:2">
 <h1>A few words about me</h1>
 
@@ -376,7 +387,7 @@
 </div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="intro_01_intro3" class="slide " data-transition="none">
+<div data-section="Intro" data-title="01_intro" id="intro_01_intro3" class="slide" data-transition="none">
 <div class="content " ref="intro/01_intro:3">
 <h1>I don't always write code, but when I do...</h1>
 
@@ -386,12 +397,7 @@
 <li>Team enlightenment</li>
 </ul>
 
-<div class="notes-section notes">
 
-<p>Some people, especially if they're not very experienced, simply don't think in
-terms of automation. Others approach it in a completely linear manner.</p>
-
-</div>
 
 <div class="slide-footer">
   <div class="slide-info slide-info-left">
@@ -402,9 +408,15 @@ terms of automation. Others approach it in a completely linear manner.</p>
   </div>
 </div>
 </div>
+<div class="notes-section notes">
+
+<p>Some people, especially if they're not very experienced, simply don't think in
+terms of automation. Others approach it in a completely linear manner.</p>
+
+</div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="packer_01_packer1" class="slide bullets incremental" data-transition="none">
+<div data-section="Packer" data-title="01_packer" id="packer_01_packer1" class="slide bullets incremental" data-transition="none">
 <div class="content bullets incremental" ref="packer/01_packer:1">
 <h1>Packer</h1>
 
@@ -414,15 +426,7 @@ terms of automation. Others approach it in a completely linear manner.</p>
 <li><a href="http://packer.io/" target="_blank">http://packer.io/</a></li>
 </ul>
 
-<div class="notes-section notes">
 
-<p>If you don't know Vagrant, it's automation around copying and configuring VMs
-from images.</p>
-
-<p>Packer creates Docker images without a Dockerfile by running things in the
-image and committing or saving.</p>
-
-</div>
 
 <div class="slide-footer">
   <div class="slide-info slide-info-left">
@@ -433,9 +437,18 @@ image and committing or saving.</p>
   </div>
 </div>
 </div>
+<div class="notes-section notes">
+
+<p>If you don't know Vagrant, it's automation around copying and configuring VMs
+from images.</p>
+
+<p>Packer creates Docker images without a Dockerfile by running things in the
+image and committing or saving.</p>
+
+</div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="packer_01_packer2" class="slide bullets incremental" data-transition="none">
+<div data-section="Packer" data-title="01_packer" id="packer_01_packer2" class="slide bullets incremental" data-transition="none">
 <div class="content bullets incremental" ref="packer/01_packer:2">
 <h1>How does packer work?</h1>
 
@@ -446,13 +459,7 @@ image and committing or saving.</p>
 <li>Configured by handwritten JSON file</li>
 </ul>
 
-<div class="notes-section notes">
 
-<p>Setup examples: shell scripts, Puppet, Chef, Salt, Ansible, etc.</p>
-
-<p>Post-install examples: Vagrant box package, docker push/tag/etc.</p>
-
-</div>
 
 <div class="slide-footer">
   <div class="slide-info slide-info-left">
@@ -463,9 +470,16 @@ image and committing or saving.</p>
   </div>
 </div>
 </div>
+<div class="notes-section notes">
+
+<p>Setup examples: shell scripts, Puppet, Chef, Salt, Ansible, etc.</p>
+
+<p>Post-install examples: Vagrant box package, docker push/tag/etc.</p>
+
+</div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="packer_01_packer3" class="slide bullets incremental" data-transition="none">
+<div data-section="Packer" data-title="01_packer" id="packer_01_packer3" class="slide bullets incremental" data-transition="none">
 <div class="content bullets incremental" ref="packer/01_packer:3">
 <h1>JSON is machine-friendly, not human-friendly</h1>
 
@@ -475,14 +489,7 @@ image and committing or saving.</p>
 <li>CentOS 6/7 build file is 169 lines and 5.5k</li>
 </ul>
 
-<div class="notes-section notes">
 
-<p>AWS CloudFormation also has special JSON keys for annotations.</p>
-
-<p>The build file is small in absolute terms, but it's a lot of JSON to manage by
-hand. There is also a second that is slightly larger.</p>
-
-</div>
 
 <div class="slide-footer">
   <div class="slide-info slide-info-left">
@@ -493,9 +500,17 @@ hand. There is also a second that is slightly larger.</p>
   </div>
 </div>
 </div>
+<div class="notes-section notes">
+
+<p>AWS CloudFormation also has special JSON keys for annotations.</p>
+
+<p>The build file is small in absolute terms, but it's a lot of JSON to manage by
+hand. There is also a second that is slightly larger.</p>
+
+</div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="packer_01_packer4" class="slide smaller" data-transition="none">
+<div data-section="Packer" data-title="01_packer" id="packer_01_packer4" class="slide smaller" data-transition="none">
 <div class="content smaller" ref="packer/01_packer:4">
 <pre class="highlight"><code class="language-json">{
   "description": "Build Vagrant-ready CentOS images that look like the official AMIs in the AWS Marketplace.",
@@ -535,7 +550,7 @@ hand. There is also a second that is slightly larger.</p>
 </div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="packer_01_packer5" class="slide smaller" data-transition="scrollUp">
+<div data-section="Packer" data-title="01_packer" id="packer_01_packer5" class="slide smaller" data-transition="scrollUp">
 <div class="content smaller" ref="packer/01_packer:5">
 <pre class="highlight"><code class="language-json">        ["modifyvm", "{{.Name}}", "--memory", "1280"],
         ["modifyvm", "{{.Name}}", "--cpus", "1"],
@@ -575,7 +590,7 @@ hand. There is also a second that is slightly larger.</p>
 </div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="packer_01_packer6" class="slide smaller" data-transition="scrollUp">
+<div data-section="Packer" data-title="01_packer" id="packer_01_packer6" class="slide smaller" data-transition="scrollUp">
 <div class="content smaller" ref="packer/01_packer:6">
 <pre class="highlight"><code class="language-json">      "ssh_username": "vagrant",
       "ssh_wait_timeout": "10000s",
@@ -615,7 +630,7 @@ hand. There is also a second that is slightly larger.</p>
 </div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="packer_01_packer7" class="slide smaller" data-transition="scrollUp">
+<div data-section="Packer" data-title="01_packer" id="packer_01_packer7" class="slide smaller" data-transition="scrollUp">
 <div class="content smaller" ref="packer/01_packer:7">
 <pre class="highlight"><code class="language-json">    {
       "type": "vagrant",
@@ -655,7 +670,7 @@ hand. There is also a second that is slightly larger.</p>
 </div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="packer_01_packer8" class="slide smaller" data-transition="scrollUp">
+<div data-section="Packer" data-title="01_packer" id="packer_01_packer8" class="slide smaller" data-transition="scrollUp">
 <div class="content smaller" ref="packer/01_packer:8">
 <pre class="highlight"><code class="language-json">        "HOME_DIR=/home/vagrant",
         "http_proxy={{user `http_proxy`}}",
@@ -695,7 +710,7 @@ hand. There is also a second that is slightly larger.</p>
 </div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="packer_01_packer9" class="slide smaller" data-transition="scrollUp">
+<div data-section="Packer" data-title="01_packer" id="packer_01_packer9" class="slide smaller" data-transition="scrollUp">
 <div class="content smaller" ref="packer/01_packer:9">
 <pre class="highlight"><code class="language-json">      "environment_vars": [
         "HOME_DIR=/home/vagrant",
@@ -735,7 +750,7 @@ hand. There is also a second that is slightly larger.</p>
 </div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="packer_01_packer10" class="slide smaller" data-transition="scrollUp">
+<div data-section="Packer" data-title="01_packer" id="packer_01_packer10" class="slide smaller" data-transition="scrollUp">
 <div class="content smaller" ref="packer/01_packer:10">
 <pre class="highlight"><code class="language-json">  "variables": {
     "headless": "true",
@@ -769,7 +784,7 @@ hand. There is also a second that is slightly larger.</p>
 </div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="packer_01_packer11" class="slide bullets incremental" data-transition="none">
+<div data-section="Packer" data-title="01_packer" id="packer_01_packer11" class="slide bullets incremental" data-transition="none">
 <div class="content bullets incremental" ref="packer/01_packer:11">
 <h1>Packer JSON is repetitious</h1>
 
@@ -779,13 +794,7 @@ hand. There is also a second that is slightly larger.</p>
 <li>Supports user-defined variables, but can not iterate</li>
 </ul>
 
-<div class="notes-section notes">
 
-<p>Builders run in parallel, so you may benefit from putting them together.</p>
-
-<p>Variables are also only usable in text fields, and not even in all of those.</p>
-
-</div>
 
 <div class="slide-footer">
   <div class="slide-info slide-info-left">
@@ -796,9 +805,16 @@ hand. There is also a second that is slightly larger.</p>
   </div>
 </div>
 </div>
+<div class="notes-section notes">
+
+<p>Builders run in parallel, so you may benefit from putting them together.</p>
+
+<p>Variables are also only usable in text fields, and not even in all of those.</p>
+
+</div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="yaml_01_yaml1" class="slide bullets incremental" data-transition="none">
+<div data-section="YAML" data-title="01_yaml" id="yaml_01_yaml1" class="slide bullets incremental" data-transition="none">
 <div class="content bullets incremental" ref="yaml/01_yaml:1">
 <h1>Enter the YAML</h1>
 
@@ -809,11 +825,7 @@ hand. There is also a second that is slightly larger.</p>
 <li><a href="http://yaml.org/" target="_blank">http://yaml.org/</a></li>
 </ul>
 
-<div class="notes-section notes">
 
-<p>Worry about a nice file first, but how do you pick a new file format?</p>
-
-</div>
 
 <div class="slide-footer">
   <div class="slide-info slide-info-left">
@@ -824,9 +836,14 @@ hand. There is also a second that is slightly larger.</p>
   </div>
 </div>
 </div>
+<div class="notes-section notes">
+
+<p>Worry about a nice file first, but how do you pick a new file format?</p>
+
+</div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="yaml_01_yaml2" class="slide bullets incremental" data-transition="none">
+<div data-section="YAML" data-title="01_yaml" id="yaml_01_yaml2" class="slide bullets incremental" data-transition="none">
 <div class="content bullets incremental" ref="yaml/01_yaml:2">
 <h1>... buuuuut</h1>
 
@@ -836,13 +853,7 @@ hand. There is also a second that is slightly larger.</p>
 <li>Direct conversion is still repetitious</li>
 </ul>
 
-<div class="notes-section notes">
 
-<p>Packer does use nested arrays, most notably for ordering postprocessors.</p>
-
-<p>Remember when computers were going to save us from mundane repetitive tasks?</p>
-
-</div>
 
 <div class="slide-footer">
   <div class="slide-info slide-info-left">
@@ -853,9 +864,16 @@ hand. There is also a second that is slightly larger.</p>
   </div>
 </div>
 </div>
+<div class="notes-section notes">
+
+<p>Packer does use nested arrays, most notably for ordering postprocessors.</p>
+
+<p>Remember when computers were going to save us from mundane repetitive tasks?</p>
+
+</div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="yaml_01_yaml3" class="slide bullets incremental" data-transition="none">
+<div data-section="YAML" data-title="01_yaml" id="yaml_01_yaml3" class="slide bullets incremental" data-transition="none">
 <div class="content bullets incremental" ref="yaml/01_yaml:3">
 <h1>DRY it up</h1>
 
@@ -865,14 +883,7 @@ hand. There is also a second that is slightly larger.</p>
 <li>Initial attempt at some top-level global settings</li>
 </ul>
 
-<div class="notes-section notes">
 
-<p>For simplicity, includes can't be nested.</p>
-
-<p>Those global settings may go away. They don't do anything you can't do with
-includes.</p>
-
-</div>
 
 <div class="slide-footer">
   <div class="slide-info slide-info-left">
@@ -883,9 +894,17 @@ includes.</p>
   </div>
 </div>
 </div>
+<div class="notes-section notes">
+
+<p>For simplicity, includes can't be nested.</p>
+
+<p>Those global settings may go away. They don't do anything you can't do with
+includes.</p>
+
+</div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="yaml_01_yaml4" class="slide smaller" data-transition="none">
+<div data-section="YAML" data-title="01_yaml" id="yaml_01_yaml4" class="slide smaller" data-transition="none">
 <div class="content smaller" ref="yaml/01_yaml:4">
 <pre class="highlight"><code class="language-yaml">---
 builders:
@@ -925,7 +944,7 @@ builders:
 </div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="yaml_01_yaml5" class="slide smaller" data-transition="scrollUp">
+<div data-section="YAML" data-title="01_yaml" id="yaml_01_yaml5" class="slide smaller" data-transition="scrollUp">
 <div class="content smaller" ref="yaml/01_yaml:5">
 <pre class="highlight"><code class="language-yaml">    image: centos:7
 provisioner_override:
@@ -965,7 +984,7 @@ post-processors:
 </div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="yaml_01_yaml6" class="slide smaller" data-transition="scrollUp">
+<div data-section="YAML" data-title="01_yaml" id="yaml_01_yaml6" class="slide smaller" data-transition="scrollUp">
 <div class="content smaller" ref="yaml/01_yaml:6">
 <pre class="highlight"><code class="language-yaml">    config_template: tmpl_vagrant.yml
     only:
@@ -1003,7 +1022,7 @@ variables:
 </div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="yaml_01_yaml7" class="slide " data-transition="none">
+<div data-section="YAML" data-title="01_yaml" id="yaml_01_yaml7" class="slide" data-transition="none">
 <div class="content " ref="yaml/01_yaml:7">
 <h1>Builder Example</h1>
 
@@ -1017,11 +1036,7 @@ variables:
   vm_name: "centos-6-{{user `stamp`}}"
   iso_checksum: c694ba4903ac2eb07d996ffa06b92d1dda78ec035d1ad87fdc9681e7245e7fc363eae987ec2476a408cf0bcaed0080ab05c7f26d7a9141eec8f898993c1057b1</code></pre>
 
-<div class="notes-section notes">
 
-<p>Excerpt from the top-level YAML file.</p>
-
-</div>
 
 <div class="slide-footer">
   <div class="slide-info slide-info-left">
@@ -1032,9 +1047,14 @@ variables:
   </div>
 </div>
 </div>
+<div class="notes-section notes">
+
+<p>Excerpt from the top-level YAML file.</p>
+
+</div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="yaml_01_yaml8" class="slide small" data-transition="none">
+<div data-section="YAML" data-title="01_yaml" id="yaml_01_yaml8" class="slide small" data-transition="none">
 <div class="content small" ref="yaml/01_yaml:8">
 <pre class="highlight"><code class="language-yaml">output_directory: "builds/{{build_name}}-{{user `stamp`}}"
 ssh_password: vagrant
@@ -1061,11 +1081,7 @@ vboxmanage:
     - "12"
 shutdown_command: echo 'vagrant' | sudo -S /sbin/halt -h -p</code></pre>
 
-<div class="notes-section notes">
 
-<p>tmpl_vbox.yml, common to both ISO and OVF VirtualBox builders.</p>
-
-</div>
 
 <div class="slide-footer">
   <div class="slide-info slide-info-left">
@@ -1076,9 +1092,14 @@ shutdown_command: echo 'vagrant' | sudo -S /sbin/halt -h -p</code></pre>
   </div>
 </div>
 </div>
+<div class="notes-section notes">
+
+<p>tmpl_vbox.yml, common to both ISO and OVF VirtualBox builders.</p>
+
+</div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="yaml_01_yaml9" class="slide " data-transition="none">
+<div data-section="YAML" data-title="01_yaml" id="yaml_01_yaml9" class="slide" data-transition="none">
 <div class="content " ref="yaml/01_yaml:9">
 <pre class="highlight"><code class="language-yaml"># Overlay for tmpl_vbox.yml
 type: virtualbox-iso
@@ -1089,11 +1110,7 @@ guest_additions_path: VBoxGuestAdditions_{{.Version}}.iso
 disk_size: 8192
 iso_checksum_type: sha512</code></pre>
 
-<div class="notes-section notes">
 
-<p>tmpl_vbox_iso.yml, second template in the list.</p>
-
-</div>
 
 <div class="slide-footer">
   <div class="slide-info slide-info-left">
@@ -1104,9 +1121,14 @@ iso_checksum_type: sha512</code></pre>
   </div>
 </div>
 </div>
+<div class="notes-section notes">
+
+<p>tmpl_vbox_iso.yml, second template in the list.</p>
+
+</div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="yaml_01_yaml10" class="slide " data-transition="none">
+<div data-section="YAML" data-title="01_yaml" id="yaml_01_yaml10" class="slide" data-transition="none">
 <div class="content " ref="yaml/01_yaml:10">
 <pre class="highlight"><code class="language-yaml">centos-6-virtualbox:
   config_template:
@@ -1118,16 +1140,7 @@ iso_checksum_type: sha512</code></pre>
   vm_name: "centos-6-{{user `stamp`}}"
   iso_checksum: c694ba4903ac2eb07d996ffa06b92d1dda78ec035d1ad87fdc9681e7245e7fc363eae987ec2476a408cf0bcaed0080ab05c7f26d7a9141eec8f898993c1057b1</code></pre>
 
-<div class="notes-section notes">
 
-<p>Everything but config_template is layered on top, and the name is moved in to
-the "name" key.</p>
-
-<p>Builders run in parallel so the order doesn't matter, so they can be named in
-the YAML. Provisioners and postprocessors require a specific order, so they
-would need a sort key.</p>
-
-</div>
 
 <div class="slide-footer">
   <div class="slide-info slide-info-left">
@@ -1138,9 +1151,19 @@ would need a sort key.</p>
   </div>
 </div>
 </div>
+<div class="notes-section notes">
+
+<p>Everything but config_template is layered on top, and the name is moved in to
+the "name" key.</p>
+
+<p>Builders run in parallel so the order doesn't matter, so they can be named in
+the YAML. Provisioners and postprocessors require a specific order, so they
+would need a sort key.</p>
+
+</div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="perl_01_perl1" class="slide bullets" data-transition="none">
+<div data-section="Perl" data-title="01_perl" id="perl_01_perl1" class="slide bullets" data-transition="none">
 <div class="content bullets" ref="perl/01_perl:1">
 <h1>The Script</h1>
 
@@ -1150,12 +1173,22 @@ would need a sort key.</p>
 
 <ul>
 <li>Perl will tell you if files can't be read or written</li>
-<li>YAMLish will complain if the input is not valid YAML</li>
 <li>Packer will tell you if the JSON output is wrong</li>
 </ul>
 </li>
 </ul>
 
+
+
+<div class="slide-footer">
+  <div class="slide-info slide-info-left">
+    <a href="https://mkheironimus.github.io/" target="_blank">Michael Heironimus</a>
+  </div>
+  <div class="slide-info slide-info-right">
+    <a href="https://twitter.com/mkheironimus" target="_blank">@mkheironimus</a>
+  </div>
+</div>
+</div>
 <div class="notes-section notes">
 
 <p>At this stage error handling is more of a "neatness counts" thing than a real
@@ -1167,19 +1200,9 @@ need. Plus I'm still in the "how does this work/look" stage with Perl 6.</p>
 your YAML just as well as on the JSON.</p>
 
 </div>
-
-<div class="slide-footer">
-  <div class="slide-info slide-info-left">
-    <a href="https://mkheironimus.github.io/" target="_blank">Michael Heironimus</a>
-  </div>
-  <div class="slide-info slide-info-right">
-    <a href="https://twitter.com/mkheironimus" target="_blank">@mkheironimus</a>
-  </div>
-</div>
-</div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="perl_01_perl2" class="slide bullets incremental" data-transition="none">
+<div data-section="Perl" data-title="01_perl" id="perl_01_perl2" class="slide bullets incremental" data-transition="none">
 <div class="content bullets incremental" ref="perl/01_perl:2">
 <h1>Perls of Wisdom</h1>
 
@@ -1189,13 +1212,7 @@ your YAML just as well as on the JSON.</p>
 <li>YAML is unfinished, so use YAMLish</li>
 </ul>
 
-<div class="notes-section notes">
 
-<p>Lessons learned.</p>
-
-<p>JSON::Tiny should work, but it's untested.</p>
-
-</div>
 
 <div class="slide-footer">
   <div class="slide-info slide-info-left">
@@ -1206,9 +1223,16 @@ your YAML just as well as on the JSON.</p>
   </div>
 </div>
 </div>
+<div class="notes-section notes">
+
+<p>Lessons learned.</p>
+
+<p>JSON::Tiny should work, but it's untested.</p>
+
+</div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="perl_01_perl3" class="slide bullets incremental" data-transition="none">
+<div data-section="Perl" data-title="01_perl" id="perl_01_perl3" class="slide bullets incremental" data-transition="none">
 <div class="content bullets incremental" ref="perl/01_perl:3">
 <h1>Modules, you say?</h1>
 
@@ -1218,15 +1242,7 @@ your YAML just as well as on the JSON.</p>
 <li>YAMLish output fails to quote some strings</li>
 </ul>
 
-<div class="notes-section notes">
 
-<p>You can't yet assume that everything will "just work" in Perl 6.</p>
-
-<p>I filed an issue on github about quoting numeric strings and the YAMLish author
-said he needed to have it quote a lot more, and that output was generally less
-mature than input.</p>
-
-</div>
 
 <div class="slide-footer">
   <div class="slide-info slide-info-left">
@@ -1237,9 +1253,18 @@ mature than input.</p>
   </div>
 </div>
 </div>
+<div class="notes-section notes">
+
+<p>You can't yet assume that everything will "just work" in Perl 6.</p>
+
+<p>I filed an issue on github about quoting numeric strings and the YAMLish author
+said he needed to have it quote a lot more, and that output was generally less
+mature than input.</p>
+
+</div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="perl_01_perl4" class="slide " data-transition="none">
+<div data-section="Perl" data-title="01_perl" id="perl_01_perl4" class="slide" data-transition="none">
 <div class="content " ref="perl/01_perl:4">
 <h1>Building a YAML starting point</h1>
 
@@ -1254,11 +1279,7 @@ mature than input.</p>
 <span class="Identifier">say</span> <span class="Identifier">$</span><span class="Identifier">yaml</span><span class="Statement">;</span>
 </code></pre>
 
-<div class="notes-section notes">
 
-<p>Done for the initial file, but don't forget the quoting problem.</p>
-
-</div>
 
 <div class="slide-footer">
   <div class="slide-info slide-info-left">
@@ -1269,9 +1290,14 @@ mature than input.</p>
   </div>
 </div>
 </div>
+<div class="notes-section notes">
+
+<p>Done for the initial file, but don't forget the quoting problem.</p>
+
+</div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="perl_02_packergen1" class="slide small" data-transition="none">
+<div data-section="Perl" data-title="02_packergen" id="perl_02_packergen1" class="slide small" data-transition="none">
 <div class="content small" ref="perl/02_packergen:1">
 <pre class="hilight">
 
@@ -1308,7 +1334,7 @@ mature than input.</p>
 </div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="perl_02_packergen2" class="slide small" data-transition="none">
+<div data-section="Perl" data-title="02_packergen" id="perl_02_packergen2" class="slide small" data-transition="none">
 <div class="content small" ref="perl/02_packergen:2">
 <pre class="hilight">
 
@@ -1347,7 +1373,7 @@ mature than input.</p>
 </div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="perl_02_packergen3" class="slide small" data-transition="none">
+<div data-section="Perl" data-title="02_packergen" id="perl_02_packergen3" class="slide small" data-transition="none">
 <div class="content small" ref="perl/02_packergen:3">
 <pre class="hilight">
 
@@ -1388,7 +1414,7 @@ mature than input.</p>
 </div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="perl_02_packergen4" class="slide small" data-transition="none">
+<div data-section="Perl" data-title="02_packergen" id="perl_02_packergen4" class="slide small" data-transition="none">
 <div class="content small" ref="perl/02_packergen:4">
 <pre class="hilight">
 
@@ -1427,7 +1453,7 @@ mature than input.</p>
 </div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="perl_02_packergen5" class="slide small" data-transition="none">
+<div data-section="Perl" data-title="02_packergen" id="perl_02_packergen5" class="slide small" data-transition="none">
 <div class="content small" ref="perl/02_packergen:5">
 <pre class="hilight">
 
@@ -1449,7 +1475,7 @@ mature than input.</p>
 </div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="closing_01_closing1" class="slide bullets incremental" data-transition="none">
+<div data-section="Closing" data-title="01_closing" id="closing_01_closing1" class="slide bullets incremental" data-transition="none">
 <div class="content bullets incremental" ref="closing/01_closing:1">
 <h1>Many possible futures</h1>
 
@@ -1460,6 +1486,17 @@ mature than input.</p>
 <li>Full tool wrapper / DSL where it's useful</li>
 </ul>
 
+
+
+<div class="slide-footer">
+  <div class="slide-info slide-info-left">
+    <a href="https://mkheironimus.github.io/" target="_blank">Michael Heironimus</a>
+  </div>
+  <div class="slide-info slide-info-right">
+    <a href="https://twitter.com/mkheironimus" target="_blank">@mkheironimus</a>
+  </div>
+</div>
+</div>
 <div class="notes-section notes">
 
 <p>"Dynamic templating" means more advanced variable expansions, macros, etc.</p>
@@ -1472,19 +1509,9 @@ workflow configuration language (maybe using a Grammar), not just JSON or Ruby
 with a library.</p>
 
 </div>
-
-<div class="slide-footer">
-  <div class="slide-info slide-info-left">
-    <a href="https://mkheironimus.github.io/" target="_blank">Michael Heironimus</a>
-  </div>
-  <div class="slide-info slide-info-right">
-    <a href="https://twitter.com/mkheironimus" target="_blank">@mkheironimus</a>
-  </div>
-</div>
-</div>
 <canvas class="annotations"></canvas>
 </div>
-<div id="closing_01_closing2" class="slide " data-transition="none">
+<div data-section="Closing" data-title="01_closing" id="closing_01_closing2" class="slide" data-transition="none">
 <div class="content " ref="closing/01_closing:2">
 <h1>That's all, folks!</h1>
 
@@ -1492,13 +1519,7 @@ with a library.</p>
 
 <p><a href="https://mkheironimus.github.io/slides-packergen/" target="_blank">https://mkheironimus.github.io/slides-packergen/</a></p>
 
-<div class="notes-section notes">
 
-<p>Code and presentation available online.</p>
-
-<p>Pause for questions, comments, and tomatoes.</p>
-
-</div>
 
 <div class="slide-footer">
   <div class="slide-info slide-info-left">
@@ -1508,6 +1529,13 @@ with a library.</p>
     <a href="https://twitter.com/mkheironimus" target="_blank">@mkheironimus</a>
   </div>
 </div>
+</div>
+<div class="notes-section notes">
+
+<p>Code and presentation available online.</p>
+
+<p>Pause for questions, comments, and tomatoes.</p>
+
 </div>
 <canvas class="annotations"></canvas>
 </div>
